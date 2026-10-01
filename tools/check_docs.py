@@ -51,6 +51,9 @@ def check_navigation(errors):
             errors.append(f"navigation.json: missing summary for {path}")
         if f"]({target.name})" not in index:
             errors.append(f"docs/README.md: missing navigation entry {path}")
+        row = f"| [{title}]({target.name}) | {page.get('summary')} |"
+        if path.startswith("docs/") and re.match(r"\d\d-", target.name) and row not in index:
+            errors.append(f"docs/README.md: navigation title/summary mismatch for {path}")
     chapters = {str(p.relative_to(ROOT)) for p in (ROOT / "docs").glob("[0-9][0-9]-*.md")}
     catalog_chapters = {p for p in paths if re.match(r"docs/\d\d-", p)}
     if catalog_chapters != chapters:
@@ -96,6 +99,21 @@ def main():
         text = path.read_text()
         if re.match(r"\d\d-", path.name) and re.search(r"^## .*?(练习|自测|手算|算例|动手实验)", text, re.M):
             errors.append(f"{path.relative_to(ROOT)}: teaching task in knowledge chapter")
+        # Exact copy/paste guard, not a semantic or technical correctness check.
+        prose = re.sub(r"```.*?```", "", text, flags=re.S)
+        seen_headings, seen_paragraphs = set(), set()
+        for heading in re.findall(r"^#{1,6} (.+)$", prose, re.M):
+            if heading in seen_headings:
+                errors.append(f"{path.relative_to(ROOT)}: duplicate heading {heading}")
+            seen_headings.add(heading)
+        if re.match(r"\d\d-", path.name):
+            for paragraph in prose.split("\n\n"):
+                paragraph = " ".join(paragraph.split())
+                if len(paragraph) < 120 or paragraph.startswith(("#", "|")):
+                    continue
+                if paragraph in seen_paragraphs:
+                    errors.append(f"{path.relative_to(ROOT)}: repeated paragraph {paragraph[:40]}")
+                seen_paragraphs.add(paragraph)
         fence = None
         math_lines = []
         start_line = 0

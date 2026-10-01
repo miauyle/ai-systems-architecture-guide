@@ -47,15 +47,19 @@ sequenceDiagram
     A->>R: 可选：检索资料
     R-->>A: 授权范围内的证据
     A->>S: 消息模板、问题与证据
-    S->>S: Tokenize 与 prefill
-    loop 每个生成步骤
-        S->>S: decode 与选取 Token
+    S->>S: Tokenize 与 Prefill 得到首输出分数
+    S->>S: 选取首 Token
+    S-->>A: 增量输出
+    loop 后续生成步骤
+        S->>S: 将上一 Token 输入 Decode 再选取
         S-->>A: 增量文本或结构化调用
     end
     A-->>U: 答案、引用或行动结果
 ```
 
 如果模型提出工具调用，应用要解析和验证调用，再执行工具并将结果放回上下文。模型输出的调用建议与工具的实际执行是两个环节。
+
+Prefill 的末端分数通常选择首输出；被选出的 Token 要在下一轮经过网络才形成它自己的各层 K/V。请求的入队、迭代、流式输出与释放细节见[推理服务](10-serving-and-distributed.md)。
 
 ## 三种容易混淆的「记忆」
 
