@@ -1,51 +1,65 @@
-# 00 · 知识体系与学习路线
+# 00 · AI 知识关系地图
 
-[返回首页](../README.md) · [开始连续课程](../course/01-prediction.md)
+[首页](../README.md) · [完整专题目录](README.md)
 
-## 当前范围
+## 用关系组织知识
 
-人工智能是较宽的研究与应用领域；机器学习研究从数据中学习规律；深度学习使用多层神经网络进行表示学习。大语言模型通常是其中一类大规模语言模型。
+AI 的概念来自不同层次：任务定义要解决什么，学习方法规定数据如何提供信号，模型规定表示与计算，执行系统管理资源，应用组织证据和动作，评估判断结果。
 
-本仓库围绕大模型驱动的 AI 系统，覆盖模型、训练、推理服务以及 RAG、Agent、评估。生成式 AI 还包括图像和音频；强化学习也有许多超出模型后训练的用途。传统机器学习、完整视觉/机器人/强化学习理论不在当前主线内，不能把仓库称为全部 AI 学科百科。
+一条技术链可以使用多种方法：图文编码器采用对比目标，语言模型采用自回归目标，应用用 RAG 提供资料，用工具做确定性操作。它们不是互斥的产品选项，而是不同位置上的组件。
 
-## 主线按问题依赖推进
+## 知识依赖
 
 ```mermaid
-flowchart TD
-    A[计数与条件预测] --> B[矩阵、概率、损失和梯度]
-    B --> C[上下文与可训练注意力]
-    C --> D[完整 Decoder 与训练信号]
-    D --> E[生成、缓存与服务]
-    E --> F[当前证据与检索]
-    F --> G[工具、状态与可恢复行动]
-    G --> H[分层评估与系统验收]
+flowchart TB
+    ML[学习目标与泛化] --> REP[表示与张量]
+    REP --> MOD[模型结构]
+    MOD --> TR[训练与后训练]
+    MOD --> INF[推理与状态]
+    DATA[数据生命周期] --> TR
+    DATA --> RET[检索与证据]
+    HW[计算基础设施] --> TR
+    HW --> INF
+    INF --> APP[应用与工具]
+    RET --> APP
+    APP --> AG[任务状态与行动]
+    EV[评估与安全] -.-> TR
+    EV -.-> INF
+    EV -.-> RET
+    EV -.-> AG
 ```
 
-每课用上一课已经建立的对象解释下一层，避免先读许多概念简介、最后再重新找实现。评估实际上贯穿所有环节，最后一课将前面的检查统一成验收方法。
+评估并非最后才开始：训练需要知道目标是否有效，检索需要知道证据是否覆盖，推理需要知道质量和性能，行动需要知道真实业务效果。安全同样贯穿数据与执行。
 
-## 课程、专题与验收对应
+## 三条连续脉络
 
-| 连续课程 | 可继续深入的专题 | 验收产物 |
+**能力脉络：**从机器学习的目标、表示和泛化进入 Token 与 Transformer，再理解预训练、后训练、多模态及生成家族。它解释能力从哪里来，以及为什么概率预测不等于事实保证。
+
+**执行脉络：**从模型计算进入张量布局、算子和数值精度，再理解 Prefill / Decode、KV、调度、并行与硬件。它解释同一个模型怎样形成不同容量、延迟与成本。
+
+**应用脉络：**从外部知识、检索与工具进入任务状态、规划、记忆和恢复，再连接评估、安全与发布。它解释语言输出怎样成为可追溯的答案或可靠的业务动作。
+
+三条脉络相互约束：证据组织改变输入负载，模型行为改变工具次数，执行资源限制上下文，数据版本决定正确事实。
+
+## 基础与深入的分工
+
+| 基础专题 | 深入专题 | 增加的系统关系 |
 | --- | --- | --- |
-| [01 预测](../course/01-prediction.md) | [03 Token 与表示](03-tokenization-and-embeddings.md) | 一张条件计数表、理论基线与移位标签 |
-| [02 参数与梯度](../course/02-tensors-and-gradients.md) | [02 数学](02-math-and-tensors.md)、[17 训练](17-training-engineering.md) | 一次完整的概率、损失、梯度与更新手算 |
-| [03 上下文与注意力](../course/03-context-and-attention.md) | [05 Attention 算例](05-attention-walkthrough.md)、[16 实现](16-transformer-implementation.md) | 未见前缀结果、梯度检查与输入干预记录 |
-| [04 Decoder 与训练](../course/04-decoder-and-training.md) | [04 结构](04-transformer.md)、[06 变体](06-modern-architectures.md)、[07 预训练](07-pretraining.md)、[08 后训练](08-post-training.md) | 一条前向计算链和一份对话标签/掩码表 |
-| [05 生成与服务](../course/05-generation-and-serving.md) | [09 显存](09-inference-and-memory.md)、[10 分布式](10-serving-and-distributed.md)、[18 引擎](18-inference-engineering.md) | KV 容量估算、缓存等价验证与时间线 |
-| [06 检索](../course/06-retrieval.md) | [19 检索工程](19-retrieval-engineering.md) | 过滤前后候选、BM25 算例与证据包 |
-| [07 Agent](../course/07-agent.md) | [20 运行时](20-agent-runtime.md)、[21 规划与记忆](21-agent-planning-and-memory.md) | 结果未知的恢复轨迹与幂等不变量 |
-| [08 验收](../course/08-evaluation.md) | [12 评估](12-evaluation.md)、[22 生产验收](22-evaluation-and-production.md) | 测试项、逐题结果、分层失败归因 |
+| [Transformer](04-transformer.md) | [计算布局](16-transformer-implementation.md) | 结构如何映射到布局、内核和缓存语义 |
+| [预训练](07-pretraining.md)、[后训练](08-post-training.md) | [训练系统](17-training-engineering.md) | 目标如何落到梯度聚合、状态分片与恢复 |
+| [推理与显存](09-inference-and-memory.md)、[服务](10-serving-and-distributed.md) | [推理引擎](18-inference-engineering.md) | 状态如何组织、复用、抢占并参与调度 |
+| [RAG 与工具](11-rag-and-agents.md) | [检索工程](19-retrieval-engineering.md) | 相关候选如何成为完整授权证据 |
+| [RAG 与工具](11-rag-and-agents.md) | [运行时](20-agent-runtime.md)、[规划与记忆](21-agent-planning-and-memory.md) | 动态决策如何保持持久状态与真实结果 |
+| [评估](12-evaluation.md) | [生产评估](22-evaluation-and-production.md) | 质量判断如何连接故障、负载与发布 |
 
-建议每次完成一段推导或一个实验，不按页数或固定周数判断进度。遇到矩阵维度问题回到第二课，遇到工具状态问题回到第七课；无需为理解一个计算先读完全部专题。
+## 跨章共同对象
 
-## 自己检查是否真正掌握
+参数由训练改变，激活是一次计算的表示，KV 是可复用的请求状态，索引是派生知识产物，业务状态是真实外部事实。每种对象有自己的更新、共享和失效规则。
 
-能回答每个组件的输入、输出、参数、状态和代价，并且能指出失败时查看哪个中间产物。例如 KV 是推理状态，不是训练参数；证据引用需要有效原文支持；模型说完成不等于事务完成。
+这些对象的生命周期见[数据](15-data-lifecycle.md)与[模型资产](26-model-lifecycle.md)。权限和信任边界见[安全](25-ai-security.md)。系统全景见[第 01 章](01-system-map.md)，组件整合见[第 14 章](14-end-to-end-case.md)。
 
-使用[学习检查清单](../templates/learning-checklist.md)记录复算结果；使用[评估模板](../templates/evaluation-record.md)记录实验配置、观测和结论边界。每课已提供练习解析，先独立作答再核对。
+## 范围与扩展
 
-## 完成主线后的扩展
+当前主线深入大模型驱动的系统，另外建立通用学习基础、生成家族与硬件关系。它尚未覆盖全部 AI 学科。后续传统学习、视觉、推荐、控制和机器人专题应在各自任务与表示层扩展，保持与现有系统脉络的连接。
 
-模型算法深入 RoPE、GQA、MoE、优化和后训练；推理工程深入算子、分页缓存、并行与调度；应用系统深入检索、计划、长期记忆、协作与任务评估。多模态与推理模型从[第 13 专题](13-multimodal-and-reasoning.md)进入，系统整合从[第 14 案例](14-end-to-end-case.md)进入。
-
-这些是继续学习的分支，不是让主线再变成一张必须背完的术语清单。参考依据与原始资料见[参考资料](references.md)。
+文件编号是稳定标识；分组目录表达当前体系，未来站点侧栏使用同一关系。原始依据集中在[参考资料](references.md)。

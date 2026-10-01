@@ -1,0 +1,224 @@
+{
+  "schema_version": 1,
+  "title": "AI 系统知识库",
+  "groups": [
+    {
+      "id": "foundations",
+      "title": "基础与全景",
+      "pages": [
+        {
+          "id": "learning-roadmap",
+          "title": "00 · AI 知识关系地图",
+          "path": "docs/00-learning-roadmap.md",
+          "summary": "各层概念的依赖与三条知识脉络"
+        },
+        {
+          "id": "system-map",
+          "title": "01 · AI 系统架构全景",
+          "path": "docs/01-system-map.md",
+          "summary": "模型、训练、推理、应用与交付物"
+        },
+        {
+          "id": "machine-learning-foundations",
+          "title": "23 · 机器学习、表示学习与泛化",
+          "path": "docs/23-machine-learning-foundations.md",
+          "summary": "学习范式、表示、泛化与分布变化"
+        },
+        {
+          "id": "math-and-tensors",
+          "title": "02 · 只补齐必要的数学与张量知识",
+          "path": "docs/02-math-and-tensors.md",
+          "summary": "张量、概率、损失与数值行为"
+        }
+      ]
+    },
+    {
+      "id": "models",
+      "title": "模型与生成",
+      "pages": [
+        {
+          "id": "tokenization-and-embeddings",
+          "title": "03 · 从文字到模型表示",
+          "path": "docs/03-tokenization-and-embeddings.md",
+          "summary": "子词、聊天模板与上下文表示"
+        },
+        {
+          "id": "transformer",
+          "title": "04 · Transformer 的完整计算路径",
+          "path": "docs/04-transformer.md",
+          "summary": "注意力、FFN、残差与输出"
+        },
+        {
+          "id": "attention-walkthrough",
+          "title": "05 · 注意力的信息流与上下文机制",
+          "path": "docs/05-attention-walkthrough.md",
+          "summary": "信息选择、Mask、位置与长上下文"
+        },
+        {
+          "id": "modern-architectures",
+          "title": "06 · 现代大模型的架构变体",
+          "path": "docs/06-modern-architectures.md",
+          "summary": "RoPE、GQA、MoE 与状态结构取舍"
+        },
+        {
+          "id": "multimodal-and-reasoning",
+          "title": "13 · 多模态与推理模型",
+          "path": "docs/13-multimodal-and-reasoning.md",
+          "summary": "视觉、音频、视频与测试时计算"
+        },
+        {
+          "id": "generative-models",
+          "title": "24 · 生成模型：自回归、VAE、GAN、扩散与流匹配",
+          "path": "docs/24-generative-models.md",
+          "summary": "自回归、VAE、GAN、扩散与流匹配"
+        }
+      ]
+    },
+    {
+      "id": "training",
+      "title": "数据与训练",
+      "pages": [
+        {
+          "id": "data-lifecycle",
+          "title": "15 · AI 数据生命周期与一致性",
+          "path": "docs/15-data-lifecycle.md",
+          "summary": "数据血缘、划分、更新与索引一致性"
+        },
+        {
+          "id": "pretraining",
+          "title": "07 · 数据与预训练架构",
+          "path": "docs/07-pretraining.md",
+          "summary": "预训练目标、数据配比与计算预算"
+        },
+        {
+          "id": "post-training",
+          "title": "08 · 后训练、适配与对齐",
+          "path": "docs/08-post-training.md",
+          "summary": "SFT、偏好、奖励与参数适配"
+        },
+        {
+          "id": "training-engineering",
+          "title": "17 · 训练系统：优化、并行与恢复",
+          "path": "docs/17-training-engineering.md",
+          "summary": "梯度聚合、优化状态、分片与恢复"
+        }
+      ]
+    },
+    {
+      "id": "execution",
+      "title": "推理与基础设施",
+      "pages": [
+        {
+          "id": "inference-and-memory",
+          "title": "09 · 推理、KV Cache 与资源管理",
+          "path": "docs/09-inference-and-memory.md",
+          "summary": "生成阶段、KV、资源增长与解码"
+        },
+        {
+          "id": "transformer-implementation",
+          "title": "16 · 模型计算布局、算子与执行语义",
+          "path": "docs/16-transformer-implementation.md",
+          "summary": "张量布局、融合、精度与缓存语义"
+        },
+        {
+          "id": "serving-and-distributed",
+          "title": "10 · 推理服务与分布式架构",
+          "path": "docs/10-serving-and-distributed.md",
+          "summary": "准入、调度、副本、并行与服务指标"
+        },
+        {
+          "id": "inference-engineering",
+          "title": "18 · 推理引擎内部、容量与调度",
+          "path": "docs/18-inference-engineering.md",
+          "summary": "块缓存、抢占、量化与推测解码"
+        },
+        {
+          "id": "compute-infrastructure",
+          "title": "27 · AI 计算基础设施与数据路径",
+          "path": "docs/27-compute-infrastructure.md",
+          "summary": "主机、HBM、通信、存储与集群"
+        }
+      ]
+    },
+    {
+      "id": "applications",
+      "title": "知识与行动",
+      "pages": [
+        {
+          "id": "rag-and-agents",
+          "title": "11 · RAG、工具调用与 Agent 应用架构",
+          "path": "docs/11-rag-and-agents.md",
+          "summary": "Prompt、外部证据、工具与控制流"
+        },
+        {
+          "id": "retrieval-engineering",
+          "title": "19 · 检索系统：从文档到可引用证据",
+          "path": "docs/19-retrieval-engineering.md",
+          "summary": "召回、融合、ANN、重排与证据"
+        },
+        {
+          "id": "agent-runtime",
+          "title": "20 · Agent 运行时：决策、执行、状态与恢复",
+          "path": "docs/20-agent-runtime.md",
+          "summary": "授权、持久状态、幂等与恢复"
+        },
+        {
+          "id": "agent-planning-and-memory",
+          "title": "21 · Agent 规划、记忆、多 Agent 与协议",
+          "path": "docs/21-agent-planning-and-memory.md",
+          "summary": "依赖、重规划、记忆与协作接口"
+        },
+        {
+          "id": "end-to-end-case",
+          "title": "14 · 系统整合：知识助手怎样成为可靠应用",
+          "path": "docs/14-end-to-end-case.md",
+          "summary": "知识助手的组件、版本与业务状态"
+        }
+      ]
+    },
+    {
+      "id": "reliability",
+      "title": "评估与生命周期",
+      "pages": [
+        {
+          "id": "evaluation",
+          "title": "12 · 评估、观测与可靠性",
+          "path": "docs/12-evaluation.md",
+          "summary": "能力与系统评估、标签与错误归因"
+        },
+        {
+          "id": "evaluation-and-production",
+          "title": "22 · 从评估集到生产验收",
+          "path": "docs/22-evaluation-and-production.md",
+          "summary": "指标、样本不确定性、故障与发布"
+        },
+        {
+          "id": "ai-security",
+          "title": "25 · AI 系统的安全、权限与信任边界",
+          "path": "docs/25-ai-security.md",
+          "summary": "数据、指令、权限、输出与供应链"
+        },
+        {
+          "id": "model-lifecycle",
+          "title": "26 · 模型资产、版本与发布生命周期",
+          "path": "docs/26-model-lifecycle.md",
+          "summary": "模型资产、路由、版本、发布与回退"
+        }
+      ]
+    }
+  ],
+  "reference_pages": [
+    {
+      "id": "glossary",
+      "title": "术语表",
+      "path": "docs/glossary.md",
+      "summary": "辅助查询与概念对应"
+    },
+    {
+      "id": "references",
+      "title": "原始资料与延伸阅读",
+      "path": "docs/references.md",
+      "summary": "论文与官方文档"
+    }
+  ]
+}

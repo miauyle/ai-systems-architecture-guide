@@ -3,11 +3,62 @@
 This is a source check. It cannot replace a browser typesetting check.
 """
 from pathlib import Path
+import json
 import re
 from urllib.parse import unquote
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def check_navigation(errors):
+    """Keep the theme-independent catalog aligned with the actual chapters."""
+    try:
+        nav = json.loads((ROOT / "navigation.json").read_text())
+    except (OSError, ValueError) as exc:
+        errors.append(f"navigation.json: {exc}")
+        return
+    if nav.get("schema_version") != 1:
+        errors.append("navigation.json: unsupported schema version")
+    groups = nav.get("groups", [])
+    ids, paths, group_ids = set(), set(), set()
+    pages = list(nav.get("reference_pages", []))
+    for group in groups:
+        group_id = group.get("id")
+        if not group_id or group_id in group_ids:
+            errors.append(f"navigation.json: missing or duplicate group ID {group_id}")
+        group_ids.add(group_id)
+        if not group.get("title") or not group.get("pages"):
+            errors.append(f"navigation.json: empty group {group_id}")
+        pages.extend(group.get("pages", []))
+    index = (ROOT / "docs/README.md").read_text()
+    for page in pages:
+        page_id, path = page.get("id"), page.get("path", "")
+        if not page_id or page_id in ids:
+            errors.append(f"navigation.json: missing or duplicate page ID {page_id}")
+        if not path or path in paths:
+            errors.append(f"navigation.json: missing or duplicate path {path}")
+        ids.add(page_id)
+        paths.add(path)
+        target = (ROOT / path).resolve()
+        if not target.is_relative_to(ROOT) or not target.is_file():
+            errors.append(f"navigation.json: invalid file {path}")
+            continue
+        title = target.read_text().splitlines()[0].removeprefix("# ")
+        if page.get("title") != title:
+            errors.append(f"navigation.json: title mismatch for {path}")
+        if not page.get("summary"):
+            errors.append(f"navigation.json: missing summary for {path}")
+        if f"]({target.name})" not in index:
+            errors.append(f"docs/README.md: missing navigation entry {path}")
+    chapters = {str(p.relative_to(ROOT)) for p in (ROOT / "docs").glob("[0-9][0-9]-*.md")}
+    catalog_chapters = {p for p in paths if re.match(r"docs/\d\d-", p)}
+    if catalog_chapters != chapters:
+        errors.append(f"navigation.json: chapter coverage mismatch {catalog_chapters ^ chapters}")
+    numbers = [Path(p).name[:2] for p in chapters]
+    if len(numbers) != len(set(numbers)):
+        errors.append("docs: duplicate chapter number")
+    print(f"Navigation groups: {len(groups)}; chapters: {len(chapters)}; reference pages: {len(pages) - len(chapters)}")
 
 
 def check_formula(formula, location, errors):
@@ -36,12 +87,15 @@ def check_formula(formula, location, errors):
 
 def main():
     errors = []
+    check_navigation(errors)
     display_count = inline_count = 0
     files = sorted(ROOT.rglob("*.md"))
     for path in files:
         if ".git" in path.parts:
             continue
         text = path.read_text()
+        if re.match(r"\d\d-", path.name) and re.search(r"^## .*?(练习|自测|手算|算例|动手实验)", text, re.M):
+            errors.append(f"{path.relative_to(ROOT)}: teaching task in knowledge chapter")
         fence = None
         math_lines = []
         start_line = 0
