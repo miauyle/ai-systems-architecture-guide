@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="AI Systems Notes">
+  <title>AI Systems Notes</title>
+  <g stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <rect x="19" y="19" width="26" height="26" rx="6"/>
+    <path d="M25 14v5M32 14v5M39 14v5M25 45v5M32 45v5M39 45v5M14 25h5M14 32h5M14 39h5M45 25h5M45 32h5M45 39h5"/>
+    <path d="M26 35v-7h6v7h6"/>
+  </g>
+  <g fill="#fff">
+    <circle cx="26" cy="28" r="2.8"/>
+    <circle cx="32" cy="35" r="2.8"/>
+    <circle cx="38" cy="35" r="2.8"/>
+  </g>
+</svg>
