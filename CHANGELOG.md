@@ -1,5 +1,11 @@
 # 更新记录
 
+## 知识库名称与定位 · 2026-10-01
+
+- 名称统一为「AI 系统架构知识库」，副标题为「大模型、推理服务、RAG 与 Agent」。
+- 更新 README、整体架构章、学习路线与 AGENTS.md，明确当前覆盖范围和 Agent 的系统层定位。
+- 远程仓库地址仍为 `miauyle/llm-architecture-guide`。
+
 ## AI 助手协作规范 · 2026-10-01
 
 - 新增根目录 `AGENTS.md`，约定知识范围、写作与引用、Markdown、验证和 GitHub 同步规则。
