@@ -82,6 +82,10 @@ const report = { checks: [], errors: [] };
     await page.keyboard.press('Escape');
     assert.equal(await page.locator('#searchModal').getAttribute('aria-hidden'), 'true');
     report.checks.push('mode persistence; search hotkeys, Chinese/English, keyboard result navigation');
+    await open('/docs/01-system-map/');
+    const sidebarLabels = await page.locator('#sidebar .sidebar__nav .sidebar__link').allTextContents();
+    assert.ok(sidebarLabels.every(label => !/^\s*\d+\s*·/.test(label)), 'Sidebar labels must not expose document number prefixes');
+    report.checks.push('sidebar uses topic labels without misleading document number prefixes');
     // Visit every knowledge page so no diagram or formula is hidden by sampling.
     const pages = nav.groups.flatMap(group => group.pages).concat(nav.reference_pages);
     for (const item of pages) {
