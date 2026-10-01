@@ -11,12 +11,16 @@ layout: default
       <a class="btn btn--primary" href="{{ '/docs/01-system-map/' | relative_url }}">阅读系统全景 <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
       <button class="btn btn--ghost" type="button" data-search-open><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> 搜索知识库 <kbd>/</kbd></button>
       <a href="{{ '/docs/' | relative_url }}">完整专题目录</a>
+      <a href="#core-topics">核心专题</a>
     </div>
   </header>
 
   <section aria-labelledby="knowledge-map" class="knowledge-section">
     <div class="knowledge-section-head"><h2 id="knowledge-map">知识地图</h2><p>六个相互连接的视角，不是按编号排列的阅读任务。</p></div>
     <div class="knowledge-root"><i class="fa-solid fa-diagram-project" aria-hidden="true"></i> AI Systems Notes <span>→ 六个知识分组</span></div>
+    <nav class="knowledge-overview" aria-label="知识分组快速定位">
+      {% for group in site.data.knowledge_map.groups %}<a href="#group-{{ group.id }}"><span aria-hidden="true">{{ forloop.index | prepend: '0' }}</span>{{ group.title }}</a>{% endfor %}
+    </nav>
     <ol class="knowledge-groups">
       {% for group in site.data.knowledge_map.groups %}
       <li class="knowledge-group" id="group-{{ group.id }}">

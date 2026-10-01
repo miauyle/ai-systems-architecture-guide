@@ -13,6 +13,10 @@
 .knowledge-root { padding: var(--sp-4) var(--sp-5); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: var(--r-md); background: var(--bg-sunken); font-weight: 650; }
 .knowledge-root i { color: var(--brand); margin-right: var(--sp-2); }
 .knowledge-root span { margin-left: var(--sp-3); font-size: var(--fs-sm); color: var(--text-soft); font-weight: 400; }
+.knowledge-overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-3); margin-top: var(--sp-4); font-size: var(--fs-sm); }
+.knowledge-overview a { padding: var(--sp-2) var(--sp-3); border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--bg-sunken); }
+.knowledge-overview span { font-family: var(--font-mono); color: var(--text-soft); margin-right: var(--sp-2); }
+.knowledge-home [id] { scroll-margin-top: calc(var(--nav-h) + var(--sp-5)); }
 .knowledge-groups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-4); padding: 0; margin: var(--sp-4) 0 var(--sp-5); list-style: none; }
 .knowledge-group { border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--sp-5); background: var(--bg-elev); min-width: 0; }
 .knowledge-group header { display: flex; align-items: baseline; gap: var(--sp-3); padding-bottom: var(--sp-4); border-bottom: 1px solid var(--border); }
@@ -42,4 +46,4 @@
 .mobile-toc .lvl-3 { padding-left: var(--sp-4); }
 @media (max-width: 1180px) { .mobile-toc { display: block; } }
 @media (max-width: 960px) { .knowledge-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); } .knowledge-topics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 600px) { .knowledge-groups { grid-template-columns: minmax(0, 1fr); } .knowledge-root span { display: block; margin: var(--sp-1) 0 0; } .knowledge-intro { padding-top: var(--sp-3); } .knowledge-group { padding: var(--sp-4); } }
+@media (max-width: 600px) { .knowledge-groups { grid-template-columns: minmax(0, 1fr); } .knowledge-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); } .knowledge-root span { display: block; margin: var(--sp-1) 0 0; } .knowledge-intro { padding-top: var(--sp-3); } .knowledge-group { padding: var(--sp-4); } }
