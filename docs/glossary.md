@@ -31,11 +31,11 @@
 | Context window | 上下文窗口 | 可接收长度不等于有效利用能力 | [03](03-tokenization-and-embeddings.md) |
 | KV Cache | 每层历史 Key/Value 缓存 | 不存储答案，不更新参数 | [09](09-inference-and-memory.md) |
 | Prefill / Decode | 输入处理 / 增量生成阶段 | 与完整首字延迟、网络延迟不同 | [09](09-inference-and-memory.md) |
-| Quantization | 量化，低比特表示与相关计算技术 | 降存储不必然降延迟 | [09](09-inference-and-memory.md) |
-| TTFT | 首 Token 延迟 | 包含排队等链路开销 | [10](10-serving-and-distributed.md) |
+| Quantization | 量化，低比特表示与相关计算技术 | 权重与 KV 分别判断；降存储不必然降延迟 | [18](18-inference-engineering.md) |
+| TTFT | 首 Token 延迟 | 先说明计时边界，再判断包含哪些链路开销 | [10](10-serving-and-distributed.md) |
 | Throughput | 吞吐，单位时间的处理量 | 与单请求延迟不同 | [10](10-serving-and-distributed.md) |
 | RAG | 检索增强生成 | 不只有向量数据库 | [11](11-rag-and-agents.md) |
-| Reranker | 对检索候选再排序的组件 | 不能找回从未进入候选的文档 | [11](11-rag-and-agents.md) |
+| Reranker | 对检索候选再排序的组件 | 不能找回从未进入候选的文档 | [19](19-retrieval-engineering.md) |
 | Tool calling | 模型提出结构化工具调用 | 提议与授权执行是两个环节 | [11](11-rag-and-agents.md) |
 | Agent | 模型动态选择行动的系统范式 | 名称不说明具体自主范围 | [11](11-rag-and-agents.md) |
 | Hallucination | 不正确或无依据的生成内容 | 低温度不能根除 | [12](12-evaluation.md) |

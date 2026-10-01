@@ -46,19 +46,19 @@
           "id": "transformer",
           "title": "04 · Transformer 的完整计算路径",
           "path": "docs/04-transformer.md",
-          "summary": "注意力、FFN、残差与输出"
+          "summary": "Token 到各层计算、LM Head 与下一轮输入"
         },
         {
           "id": "attention-walkthrough",
           "title": "05 · 注意力的信息流与上下文机制",
           "path": "docs/05-attention-walkthrough.md",
-          "summary": "信息选择、Mask、位置与长上下文"
+          "summary": "逐查询匹配、归一化、内容汇总与信息边界"
         },
         {
           "id": "modern-architectures",
           "title": "06 · 现代大模型的架构变体",
           "path": "docs/06-modern-architectures.md",
-          "summary": "RoPE、GQA、MoE 与状态结构取舍"
+          "summary": "位置旋转、头共享、专家路由与状态取舍"
         },
         {
           "id": "multimodal-and-reasoning",
@@ -88,19 +88,19 @@
           "id": "pretraining",
           "title": "07 · 数据与预训练架构",
           "path": "docs/07-pretraining.md",
-          "summary": "预训练目标、数据配比与计算预算"
+          "summary": "输入标签、监督 Mask、反向信号与数据配比"
         },
         {
           "id": "post-training",
           "title": "08 · 后训练、适配与对齐",
           "path": "docs/08-post-training.md",
-          "summary": "SFT、偏好、奖励与参数适配"
+          "summary": "SFT、DPO、在线 RL 与 LoRA 的计算路径"
         },
         {
           "id": "training-engineering",
           "title": "17 · 训练系统：优化、并行与恢复",
           "path": "docs/17-training-engineering.md",
-          "summary": "梯度聚合、优化状态、分片与恢复"
+          "summary": "累积归一化、梯度通信、参数取回与一致恢复"
         }
       ]
     },
@@ -112,31 +112,31 @@
           "id": "inference-and-memory",
           "title": "09 · 推理、KV Cache 与资源管理",
           "path": "docs/09-inference-and-memory.md",
-          "summary": "生成阶段、KV、资源增长与解码"
+          "summary": "逐层 KV 写入读取、生成计数与缓存复用条件"
         },
         {
           "id": "transformer-implementation",
           "title": "16 · 模型计算布局、算子与执行语义",
           "path": "docs/16-transformer-implementation.md",
-          "summary": "张量布局、融合、精度与缓存语义"
+          "summary": "拆头打包、融合、在线 Softmax 与增量语义"
         },
         {
           "id": "serving-and-distributed",
           "title": "10 · 推理服务与分布式架构",
           "path": "docs/10-serving-and-distributed.md",
-          "summary": "准入、调度、副本、并行与服务指标"
+          "summary": "请求生命周期、TP 矩阵切分与分布式交接"
         },
         {
           "id": "inference-engineering",
           "title": "18 · 推理引擎内部、容量与调度",
           "path": "docs/18-inference-engineering.md",
-          "summary": "块缓存、抢占、量化与推测解码"
+          "summary": "逻辑块映射、前缀共享、预算与验证状态提交"
         },
         {
           "id": "compute-infrastructure",
           "title": "27 · AI 计算基础设施与数据路径",
           "path": "docs/27-compute-infrastructure.md",
-          "summary": "主机、HBM、通信、存储与集群"
+          "summary": "缓冲传输、数据复用、集体通信与资源关键路径"
         }
       ]
     },
@@ -148,25 +148,25 @@
           "id": "rag-and-agents",
           "title": "11 · RAG、工具调用与 Agent 应用架构",
           "path": "docs/11-rag-and-agents.md",
-          "summary": "Prompt、外部证据、工具与控制流"
+          "summary": "证据、调用提案、执行边界与应用控制流"
         },
         {
           "id": "retrieval-engineering",
           "title": "19 · 检索系统：从文档到可引用证据",
           "path": "docs/19-retrieval-engineering.md",
-          "summary": "召回、融合、ANN、重排与证据"
+          "summary": "离线对象、候选搜索、重排与断言证据绑定"
         },
         {
           "id": "agent-runtime",
           "title": "20 · Agent 运行时：决策、执行、状态与恢复",
           "path": "docs/20-agent-runtime.md",
-          "summary": "授权、持久状态、幂等与恢复"
+          "summary": "决策快照、意图记录、幂等执行与对账恢复"
         },
         {
           "id": "agent-planning-and-memory",
           "title": "21 · Agent 规划、记忆、多 Agent 与协议",
           "path": "docs/21-agent-planning-and-memory.md",
-          "summary": "依赖、重规划、记忆与协作接口"
+          "summary": "就绪任务、依赖失效、记忆读写与协议边界"
         },
         {
           "id": "end-to-end-case",

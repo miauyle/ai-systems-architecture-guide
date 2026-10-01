@@ -2,7 +2,7 @@
 
 [首页](../README.md) · [知识关系地图](00-learning-roadmap.md)
 
-正文按知识关系分组。编号用于稳定标识，不表示必须按数字顺序阅读。基础章解释对象与边界，深入章解释执行、状态和组件协同。
+正文按知识关系分组。编号用于稳定标识，不表示必须按数字顺序阅读。基础章给出完整逻辑主线，深入章展开布局、状态、调度与工程代价；相互链接，不以术语列表替代机制。
 
 ## 基础与全景
 
@@ -18,9 +18,9 @@
 | 章节 | 展开的关系 |
 | --- | --- |
 | [03 · 从文字到模型表示](03-tokenization-and-embeddings.md) | 子词、聊天模板与上下文表示 |
-| [04 · Transformer 的完整计算路径](04-transformer.md) | 注意力、FFN、残差与输出 |
-| [05 · 注意力的信息流与上下文机制](05-attention-walkthrough.md) | 信息选择、Mask、位置与长上下文 |
-| [06 · 现代大模型的架构变体](06-modern-architectures.md) | RoPE、GQA、MoE 与状态结构取舍 |
+| [04 · Transformer 的完整计算路径](04-transformer.md) | Token 到各层计算、LM Head 与下一轮输入 |
+| [05 · 注意力的信息流与上下文机制](05-attention-walkthrough.md) | 逐查询匹配、归一化、内容汇总与信息边界 |
+| [06 · 现代大模型的架构变体](06-modern-architectures.md) | 位置旋转、头共享、专家路由与状态取舍 |
 | [13 · 多模态与推理模型](13-multimodal-and-reasoning.md) | 视觉、音频、视频与测试时计算 |
 | [24 · 生成模型：自回归、VAE、GAN、扩散与流匹配](24-generative-models.md) | 自回归、VAE、GAN、扩散与流匹配 |
 
@@ -29,28 +29,28 @@
 | 章节 | 展开的关系 |
 | --- | --- |
 | [15 · AI 数据生命周期与一致性](15-data-lifecycle.md) | 数据血缘、划分、更新与索引一致性 |
-| [07 · 数据与预训练架构](07-pretraining.md) | 预训练目标、数据配比与计算预算 |
-| [08 · 后训练、适配与对齐](08-post-training.md) | SFT、偏好、奖励与参数适配 |
-| [17 · 训练系统：优化、并行与恢复](17-training-engineering.md) | 梯度聚合、优化状态、分片与恢复 |
+| [07 · 数据与预训练架构](07-pretraining.md) | 输入标签、监督 Mask、反向信号与数据配比 |
+| [08 · 后训练、适配与对齐](08-post-training.md) | SFT、DPO、在线 RL 与 LoRA 的计算路径 |
+| [17 · 训练系统：优化、并行与恢复](17-training-engineering.md) | 累积归一化、梯度通信、参数取回与一致恢复 |
 
 ## 推理与基础设施
 
 | 章节 | 展开的关系 |
 | --- | --- |
-| [09 · 推理、KV Cache 与资源管理](09-inference-and-memory.md) | 生成阶段、KV、资源增长与解码 |
-| [16 · 模型计算布局、算子与执行语义](16-transformer-implementation.md) | 张量布局、融合、精度与缓存语义 |
-| [10 · 推理服务与分布式架构](10-serving-and-distributed.md) | 准入、调度、副本、并行与服务指标 |
-| [18 · 推理引擎内部、容量与调度](18-inference-engineering.md) | 块缓存、抢占、量化与推测解码 |
-| [27 · AI 计算基础设施与数据路径](27-compute-infrastructure.md) | 主机、HBM、通信、存储与集群 |
+| [09 · 推理、KV Cache 与资源管理](09-inference-and-memory.md) | 逐层 KV 写入读取、生成计数与缓存复用条件 |
+| [16 · 模型计算布局、算子与执行语义](16-transformer-implementation.md) | 拆头打包、融合、在线 Softmax 与增量语义 |
+| [10 · 推理服务与分布式架构](10-serving-and-distributed.md) | 请求生命周期、TP 矩阵切分与分布式交接 |
+| [18 · 推理引擎内部、容量与调度](18-inference-engineering.md) | 逻辑块映射、前缀共享、预算与验证状态提交 |
+| [27 · AI 计算基础设施与数据路径](27-compute-infrastructure.md) | 缓冲传输、数据复用、集体通信与资源关键路径 |
 
 ## 知识与行动
 
 | 章节 | 展开的关系 |
 | --- | --- |
-| [11 · RAG、工具调用与 Agent 应用架构](11-rag-and-agents.md) | Prompt、外部证据、工具与控制流 |
-| [19 · 检索系统：从文档到可引用证据](19-retrieval-engineering.md) | 召回、融合、ANN、重排与证据 |
-| [20 · Agent 运行时：决策、执行、状态与恢复](20-agent-runtime.md) | 授权、持久状态、幂等与恢复 |
-| [21 · Agent 规划、记忆、多 Agent 与协议](21-agent-planning-and-memory.md) | 依赖、重规划、记忆与协作接口 |
+| [11 · RAG、工具调用与 Agent 应用架构](11-rag-and-agents.md) | 证据、调用提案、执行边界与应用控制流 |
+| [19 · 检索系统：从文档到可引用证据](19-retrieval-engineering.md) | 离线对象、候选搜索、重排与断言证据绑定 |
+| [20 · Agent 运行时：决策、执行、状态与恢复](20-agent-runtime.md) | 决策快照、意图记录、幂等执行与对账恢复 |
+| [21 · Agent 规划、记忆、多 Agent 与协议](21-agent-planning-and-memory.md) | 就绪任务、依赖失效、记忆读写与协议边界 |
 | [14 · 系统整合：知识助手怎样成为可靠应用](14-end-to-end-case.md) | 知识助手的组件、版本与业务状态 |
 
 ## 评估与生命周期

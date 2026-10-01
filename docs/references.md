@@ -2,7 +2,7 @@
 
 [返回目录](../README.md)
 
-本表提供稳定知识的原始资料入口，不是实时模型榜单。关键原理在对应章节解释，资料用于追溯依据。2026-10-01 核对了本次新增的生成模型、配置、硬件与安全入口，以及本次展开的部分核心论文；未对所有历史外链逐一确认。官方接口和支持条件以所用版本为准。
+本表提供稳定知识的原始资料入口，不是实时模型榜单。关键原理在对应章节解释，资料用于追溯依据。2026-10-01 核对了核心计算、训练、缓存、并行、检索与运行时的部分论文和官方机制文档，并补充对应入口；未对所有历史外链逐一确认。官方接口和支持条件以所用版本为准。
 
 ## 核心结构与表示
 
@@ -38,12 +38,16 @@
 | [LoRA](https://arxiv.org/abs/2106.09685) | 2021 | 低秩适配 | 低秩更新图与公式 |
 | [QLoRA](https://arxiv.org/abs/2305.14314) | 2023 | 量化基础模型上的微调 | 内存机制与实验设置 |
 | [ZeRO](https://arxiv.org/abs/1910.02054) | 2019 | 分片训练状态 | 各阶段分片对象 |
+| [Megatron-LM](https://arxiv.org/abs/1909.08053) | 2019 | TP 矩阵切分与层内通信 | FFN 与 Attention 划分图 |
+| [PyTorch Distributed](https://arxiv.org/abs/2006.15704) | 2020 | DDP 梯度桶、通信重叠与跳过同步 | 反向就绪与归约顺序 |
 
 ## 服务、应用与多模态
 
 | 资料 | 年份 | 主题 | 建议先看 |
 | --- | --- | --- | --- |
 | [PagedAttention / vLLM](https://arxiv.org/abs/2309.06180) | 2023 | KV 管理与服务 | 分页设计及负载假设 |
+| [Orca](https://www.usenix.org/conference/osdi22/presentation/yu) | 2022 | 迭代级服务调度 | 请求加入与完成的调度边界 |
+| [DistServe](https://arxiv.org/abs/2401.09670) | 2024 | Prefill / Decode 分离 | 阶段隔离、KV 传输与服务目标 |
 | [Speculative Decoding](https://arxiv.org/abs/2211.17192) | 2022 | 草稿与验证 | 采样正确性及加速条件 |
 | [Retrieval-Augmented Generation](https://arxiv.org/abs/2005.11401) | 2020 | 检索增强生成 | 原始方法与实验任务 |
 | [ReAct](https://arxiv.org/abs/2210.03629) | 2022 | 推理与行动交织的 Agent 范式 | 工具反馈循环 |
@@ -60,7 +64,7 @@
 | [Dense Passage Retrieval](https://arxiv.org/abs/2004.04906) | 2020 | 稠密检索的训练与评估 |
 | [Sentence-BERT](https://arxiv.org/abs/1908.10084) | 2019 | 句向量与相似度任务 |
 | [BM25 综述](https://doi.org/10.1561/1500000019) | 2009 | 词频、逆文档频率与长度归一化 |
-| [Reciprocal Rank Fusion](https://doi.org/10.1145/1571941.1572114) | 2009 | 基于名次的检索融合 |
+| [Reciprocal Rank Fusion 作者版](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf) | 2009 | 基于名次的检索融合；[DOI](https://doi.org/10.1145/1571941.1572114) |
 | [HNSW](https://arxiv.org/abs/1603.09320) | 2016 | 近似最近邻与图索引 |
 | [Tree of Thoughts](https://arxiv.org/abs/2305.10601) | 2023 | 多候选搜索与选择机制的实例 |
 | [Reflexion](https://arxiv.org/abs/2303.11366) | 2023 | 反馈与记忆机制的研究实例 |
@@ -74,10 +78,16 @@
 - [Hugging Face Tokenizers 文档](https://huggingface.co/docs/tokenizers/index)：实际切分、编码和训练流程。
 - [PyTorch 文档](https://docs.pytorch.org/docs/stable/index.html)：张量、自动微分、分布式与数值实现。
 - [vLLM 文档](https://docs.vllm.ai/)：服务配置、支持的模型与运行条件。
+- [Hugging Face Cache Explanation](https://huggingface.co/docs/transformers/cache_explanation)：逐层 KV、增量位置与有效历史。
+- [vLLM Prefix Caching 设计](https://docs.vllm.ai/en/latest/design/prefix_caching/)：前缀块标识、引用与分配流程；属于具体引擎实现。
+- [PyTorch FSDP 教程](https://docs.pytorch.org/tutorials/intermediate/FSDP_tutorial.html)：参数取回、梯度分发、分片更新与预取。
+- [NCCL 集体操作](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/collectives.html)：归约、拼接、分发与 rank 对应关系。
+- [CUDA 异步执行](https://docs.nvidia.com/cuda/cuda-programming-guide/02-basics/asynchronous-execution.html)：stream、事件、传输与执行依赖。
 - [SentencePiece 项目](https://github.com/google/sentencepiece)：Tokenization 工具。
 - [GitHub Markdown 文档](https://docs.github.com/en/get-started/writing-on-github)：公式、Mermaid 与 Markdown 阅读方式。
 - [MCP 规范](https://modelcontextprotocol.io/specification/latest)：工具与资源的协议约定；版本随规范演进。
 - [LangGraph 文档](https://docs.langchain.com/oss/python/langgraph/overview)：状态、图编排和运行时机制的实现入口。
+- [LangGraph 持久化](https://docs.langchain.com/oss/python/langgraph/persistence)：检查点与恢复的实现参考，不等于外部副作用的 exactly-once 保证。
 
 官方文档会更新，使用具体接口时记录版本。论文年份按本表所链接预印本的首次发布年份，可能与会议发表年份不同。
 
