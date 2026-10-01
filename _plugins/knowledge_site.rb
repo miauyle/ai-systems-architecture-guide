@@ -26,7 +26,7 @@ module AISystems
           { "title" => "GitHub", "url" => "https://github.com/miauyle/ai-systems-notes", "icon" => "fa-brands fa-github" }
         ],
         "sidebar" => (groups + [{ "title" => "查询与来源", "pages" => refs }]).map do |g|
-          { "title" => g.fetch("title"), "children" => g.fetch("pages").map { |p| { "title" => p.fetch("title"), "url" => p.fetch("url") } } }
+          { "title" => g.fetch("title"), "children" => g.fetch("pages").map { |p| { "title" => p.fetch("title").sub(/\A\d+\s*·\s*/, ""), "url" => p.fetch("url") } } }
         end
       }
       collection = site.collections.fetch("docs")
