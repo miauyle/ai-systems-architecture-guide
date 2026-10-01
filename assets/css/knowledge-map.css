@@ -46,4 +46,13 @@
 .mobile-toc .lvl-3 { padding-left: var(--sp-4); }
 @media (max-width: 1180px) { .mobile-toc { display: block; } }
 @media (max-width: 960px) { .knowledge-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); } .knowledge-topics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 600px) { .knowledge-groups { grid-template-columns: minmax(0, 1fr); } .knowledge-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); } .knowledge-root span { display: block; margin: var(--sp-1) 0 0; } .knowledge-intro { padding-top: var(--sp-3); } .knowledge-group { padding: var(--sp-4); } }
+@media (max-width: 600px) {
+  .knowledge-groups { grid-template-columns: minmax(0, 1fr); }
+  .knowledge-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .knowledge-root span { display: block; margin: var(--sp-1) 0 0; }
+  .knowledge-intro { padding-block: var(--sp-3) var(--sp-4); }
+  .knowledge-actions { gap: var(--sp-3); }
+  .knowledge-actions .btn { padding-inline: var(--sp-4); }
+  .knowledge-section { margin-top: var(--sp-4); }
+  .knowledge-group { padding: var(--sp-4); }
+}
