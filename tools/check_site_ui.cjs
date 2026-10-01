@@ -49,7 +49,7 @@ const report = { checks: [], errors: [] };
     assert.equal(await page.locator('.knowledge-overview a').count(), 6);
     assert.deepEqual(await page.locator('.knowledge-group h3').allTextContents(), nav.groups.map(g => g.title));
     const brandLogo = page.locator('.navbar .brand__logo');
-    assert.match(await brandLogo.getAttribute('src'), /logo-theme\\.svg$/);
+    assert.match(await brandLogo.getAttribute('src'), /logo-theme\.svg$/);
     const aquaLogoBackground = await brandLogo.evaluate(node => getComputedStyle(node).backgroundImage);
     await page.locator('#skinPicker > .navbar__icon-btn').click();
     await page.locator('[data-skin-set="violet"]').click();
