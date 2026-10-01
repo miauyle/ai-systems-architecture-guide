@@ -1,0 +1,48 @@
+---
+layout: default
+---
+<div class="knowledge-home">
+  <header class="knowledge-intro">
+    <p class="knowledge-eyebrow">AI Systems Knowledge Map</p>
+    <h1>AI Systems Notes</h1>
+    <p class="knowledge-lead">从数据与模型，到训练、推理服务和应用系统。</p>
+    <p>沿着数据、计算与状态的流动，理解技术为何存在、如何协同，以及它们的工程代价。</p>
+    <div class="knowledge-actions">
+      <a class="btn btn--primary" href="{{ '/docs/01-system-map/' | relative_url }}">阅读系统全景 <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+      <button class="btn btn--ghost" type="button" data-search-open><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> 搜索知识库 <kbd>/</kbd></button>
+      <a href="{{ '/docs/' | relative_url }}">完整专题目录</a>
+    </div>
+  </header>
+
+  <section aria-labelledby="knowledge-map" class="knowledge-section">
+    <div class="knowledge-section-head"><h2 id="knowledge-map">知识地图</h2><p>六个相互连接的视角，不是按编号排列的阅读任务。</p></div>
+    <div class="knowledge-root"><i class="fa-solid fa-diagram-project" aria-hidden="true"></i> AI Systems Notes <span>→ 六个知识分组</span></div>
+    <ol class="knowledge-groups">
+      {% for group in site.data.knowledge_map.groups %}
+      <li class="knowledge-group" id="group-{{ group.id }}">
+        <header><span class="knowledge-number" aria-hidden="true">{{ forloop.index | prepend: '0' }}</span><h3>{{ group.title }}</h3></header>
+        <ul>
+          {% for item in group.pages %}
+          <li><a href="{{ item.url | relative_url }}">{{ item.title | split: ' · ' | last }}</a><p>{{ item.summary }}</p></li>
+          {% endfor %}
+        </ul>
+      </li>
+      {% endfor %}
+    </ol>
+    <p class="knowledge-connection">模型结构决定计算关系，训练形成参数，推理系统管理执行与资源，应用组织证据与动作；评估和生命周期贯穿每一层。<a href="{{ '/docs/00-learning-roadmap/' | relative_url }}">查看专题之间的依赖 →</a></p>
+  </section>
+
+  <section aria-labelledby="core-topics" class="knowledge-section">
+    <div class="knowledge-section-head"><h2 id="core-topics">核心专题</h2><p>直接进入机制解释，不只查询名词。</p></div>
+    <div class="knowledge-topics">
+      {% for topic in site.data.core_topics %}
+      <a class="knowledge-topic" href="{{ topic.url | relative_url }}"><strong>{{ topic.title }}</strong><span>{{ topic.text }}</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+      {% endfor %}
+    </div>
+  </section>
+  <nav class="knowledge-resources" aria-label="相关知识入口">
+    <a href="{{ '/docs/glossary/' | relative_url }}">术语查询</a><a href="{{ '/docs/references/' | relative_url }}">原始资料</a>
+    <a href="https://miauyle.github.io/algorithm-notes/">Algorithm Notes <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+    <a href="https://miauyle.github.io/ai-storage-notes/">AI Storage Notes <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+  </nav>
+</div>

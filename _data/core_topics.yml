@@ -1,0 +1,24 @@
+- title: Transformer
+  url: /docs/04-transformer/
+  text: Token、Attention、FFN 与下一次生成
+- title: Training
+  url: /docs/17-training-engineering/
+  text: 监督信号、梯度、分片更新与检查点
+- title: Inference
+  url: /docs/09-inference-and-memory/
+  text: Prefill / Decode、采样与执行代价
+- title: KV Cache
+  url: /docs/18-inference-engineering/
+  text: 写入读取、分页、前缀共享与回收
+- title: Serving
+  url: /docs/10-serving-and-distributed/
+  text: 请求生命周期、批调度与分布式执行
+- title: RAG
+  url: /docs/19-retrieval-engineering/
+  text: 从索引、候选检索到可引用证据
+- title: Agent
+  url: /docs/20-agent-runtime/
+  text: 工具调用、持久状态与可恢复行动
+- title: Evaluation
+  url: /docs/12-evaluation/
+  text: 质量、成本、可靠性与分层评估

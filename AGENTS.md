@@ -28,16 +28,16 @@
 - `docs/glossary.md`：辅助术语查询，不能替代正文。
 - `docs/references.md`：原始资料入口。
 - `navigation.json`：与主题无关的分组导航；新增、删除、改名时同步目录与它。
-- `maintenance/`：仓库协作与未来 GitHub Pages 适配说明，不混入知识正文。
+- `maintenance/`：仓库协作与 GitHub Pages 发布说明，不混入知识正文。
 - `templates/`：可选的工程维护记录，不作为学习作业。
 - `tools/check_docs.py`：链接、章节、导航和文档源检查。
 - `CHANGELOG.md`：实质性内容与结构更新。
 
-## Markdown 与未来网站
+## Markdown 与文档网站
 
 正文保持独立 Markdown，文件链接使用相对路径。图使用 Mermaid，结构清晰且文字短；小表格优于冗长流程图。独立定义公式使用 `math` 围栏；表格中的维度与算式使用代码或普通文本。
 
-尚未选定主题，不擅自添加某个框架、主题或部署流程。选定后再适配侧栏、目录、公式、Mermaid、移动阅读、搜索和 `/ai-systems-notes/` 子路径。源码提交、站点构建和上线是不同状态。
+文档站复用 `algorithm-notes` 和 `ai-storage-notes` 的 Jekyll + DocSteer 1.1.1，默认 aqua 配色，不另换技术栈。`_plugins/knowledge_site.rb` 构建时读取 `docs/` 与 `navigation.json`，生成页面、侧栏和首页分组；不维护第二份正文。主题负责导航、搜索、深浅色与排版，首页突出 AI Systems Knowledge Map。公式与 Mermaid 使用构建时准备的本地渲染资源，路径统一在 `/ai-systems-notes/` 下。源码提交、站点构建和上线是不同状态。
 
 新增或改变数学公式时，检查源格式，并在真实数学渲染器中核验；仅修改周边正文且公式未变，不要求重做无关排版。不得把未实际执行的渲染或外链检查报告为已通过。
 
@@ -45,7 +45,7 @@
 
 修改前读取相关内容、查看 Git 状态并保留既有工作。新增、删除和移动文件后检查链接、导航、唯一章节 ID 和围栏；运行 `python tools/check_docs.py`。查看实际 diff，检查教学内容是否意外回流、章节之间有无矛盾。
 
-实质性修改更新 `CHANGELOG.md`。当前不包含教学算法，无需为了文档形式增加代码依赖。未来若增加构建系统，运行真实构建并核对输出与路径。
+实质性修改更新 `CHANGELOG.md`。不增加教学算法或教学依赖。网站修改运行真实 Jekyll 构建、`python tools/check_site.py` 与 `node tools/check_site_ui.cjs`；浏览器检查公式、图、搜索、导航、模式切换和移动体验。无法执行时报告实际边界，不以模拟 Markdown 渲染替代主题构建。
 
 ## GitHub 交付
 

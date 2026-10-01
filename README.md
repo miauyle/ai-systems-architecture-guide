@@ -35,7 +35,9 @@
 
 可直接在 GitHub 阅读全部 Markdown。结构图使用 Mermaid，必要定义公式保留 GitHub 数学格式，章节采用相对链接。
 
-后续接入你选定的 GitHub Pages 主题。当前已经整理分组目录和与主题无关的 [navigation.json](navigation.json)，尚未选择主题、添加构建配置或部署网站。主题适配要求见 [Pages 准备说明](maintenance/publishing.md)。
+文档站复用 `algorithm-notes`、`ai-storage-notes` 的 Jekyll + DocSteer 主题与 aqua 配色。首页以 AI Systems Knowledge Map 展示六个分组及八个核心专题，文档页提供侧栏、页内目录、全文搜索、深浅色模式、公式和 Mermaid。`docs/` 与 [navigation.json](navigation.json) 在构建时生成站点，不维护两份正文。
+
+站点地址：[AI Systems Notes](https://miauyle.github.io/ai-systems-notes/)。实际发布状态以仓库 Pages 工作流为准，源码合并不等于部署成功。构建与发布方式见 [Pages 发布说明](maintenance/publishing.md)。
 
 ## 维护
 
