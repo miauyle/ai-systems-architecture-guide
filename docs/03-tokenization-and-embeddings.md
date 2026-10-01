@@ -18,7 +18,7 @@ Token 数直接影响上下文占用、计算量和 API 计费。应使用目标
 
 ## Embedding：ID 查表得到向量
 
-设词表大小 $V=32,000$，隐藏维度 $d=512$，Embedding 权重为 $E\in\mathbb{R}^{V\times d}$。Token ID 为 17 时，取第 17 行向量作为初始表示。该表由训练学习，不是人工逐项填写。
+设词表大小 $`V=32,000`$，隐藏维度 $`d=512`$，Embedding 权重为 $`E\in\mathbb{R}^{V\times d}`$。Token ID 为 17 时，取第 17 行向量作为初始表示。该表由训练学习，不是人工逐项填写。
 
 ```mermaid
 flowchart LR

@@ -89,7 +89,7 @@ flowchart TB
 ## 仓库结构与维护
 
 ```text
-llm-architecture-guide/
+ai-systems-architecture-guide/
 ├── README.md
 ├── docs/                 # 中文教程、图解、练习和资料
 ├── templates/            # 学习检查清单、架构决策与评估记录
@@ -99,8 +99,8 @@ llm-architecture-guide/
 └── .gitignore
 ```
 
-全部正文使用 Markdown，公式使用 GitHub 支持的数学语法，结构图使用 Mermaid。不需要安装依赖。可直接在 GitHub 中阅读。
+全部正文使用 Markdown，独立公式使用 GitHub 支持的 `math` 代码块，结构图使用 Mermaid；表格中的张量形状和算式使用代码或普通文本。不需要安装依赖，可直接在 GitHub 中阅读。
 
 后续可将这些 Markdown 接入 GitHub Pages 文档主题。选定主题后再配置站点导航、数学公式、Mermaid 和部署流程；当前交付尚未包含网站主题或 Pages 部署。
 
-远程仓库：[miauyle/llm-architecture-guide](https://github.com/miauyle/llm-architecture-guide)，文档分支为 `main`。仓库提交与 GitHub Pages 网站部署是两个状态，当前尚未配置 Pages。后续发布方式参见[GitHub 发布说明](docs/publishing.md)。
+远程仓库：[miauyle/ai-systems-architecture-guide](https://github.com/miauyle/ai-systems-architecture-guide)，文档分支为 `main`。仓库提交与 GitHub Pages 网站部署是两个状态，当前尚未配置 Pages。后续发布方式参见[GitHub 发布说明](docs/publishing.md)。

@@ -32,12 +32,14 @@ flowchart TD
 
 一层可写为：
 
-$$
-U=X+\operatorname{Attention}(\operatorname{Norm}(X))
-$$
-$$
-Y=U+\operatorname{FFN}(\operatorname{Norm}(U))
-$$
+```math
+U=X+\mathrm{Attention}(\mathrm{Norm}(X))
+```
+
+```math
+Y=U+\mathrm{FFN}(\mathrm{Norm}(U))
+```
+
 
 位置机制在注意力或输入等处应用，取决于实现。图中没有把它强行限定在某一个位置。
 
@@ -45,9 +47,10 @@ $$
 
 对单个头，先用三组可学习权重把隐藏状态映射为：
 
-$$
+```math
 Q=XW_Q,\quad K=XW_K,\quad V=XW_V
-$$
+```
+
 
 - Q：当前位置用于匹配信息的查询特征。
 - K：各位置用于被匹配的键特征。
@@ -55,17 +58,18 @@ $$
 
 Q/K/V 来自学习到的投影；不是人类写的查询语句或数据库主键。经典缩放点积注意力是：
 
-$$
-A=\operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_h}}+M\right),\qquad Z=AV
-$$
+```math
+A=\mathrm{softmax}\left(\frac{QK^\top}{\sqrt{d_h}}+M\right),\qquad Z=AV
+```
 
-Softmax 沿每个查询对应的键位置进行。$M$ 是 Mask：允许位置取 0，不允许的位置概念上取负无穷，从而让其权重为 0。
 
-除以 $\sqrt{d_h}$ 是为了控制点积分数的尺度，减轻较大维度时 Softmax 过于饱和的问题。
+Softmax 沿每个查询对应的键位置进行。$`M`$ 是 Mask：允许位置取 0，不允许的位置概念上取负无穷，从而让其权重为 0。
+
+除以 $`\sqrt{d_h}`$ 是为了控制点积分数的尺度，减轻较大维度时 Softmax 过于饱和的问题。
 
 ## 因果 Mask
 
-位置 $t$ 预测下一个 Token 时，只能使用当前位置及其之前的输入，不能读取未来位置。
+位置 $`t`$ 预测下一个 Token 时，只能使用当前位置及其之前的输入，不能读取未来位置。
 
 ```text
           键位置
@@ -80,11 +84,12 @@ Softmax 沿每个查询对应的键位置进行。$M$ 是 Mask：允许位置取
 
 ## 多头注意力
 
-在常规多头设计中，多个头分别学习不同的投影，输出拼接后再由 $W_O$ 投影回隐藏维度：
+在常规多头设计中，多个头分别学习不同的投影，输出拼接后再由 $`W_O`$ 投影回隐藏维度：
 
-$$
-\operatorname{MHA}(X)=\operatorname{Concat}(Z_1,\ldots,Z_h)W_O
-$$
+```math
+\mathrm{MHA}(X)=\mathrm{Concat}(Z_1,\ldots,Z_h)W_O
+```
+
 
 它增加了不同特征子空间中的信息组合能力，但不能假设每个头都对应固定语法或某种人类可解释功能。
 
@@ -92,39 +97,40 @@ $$
 
 经典 FFN 为：
 
-$$
-\operatorname{FFN}(x)=\phi(xW_1+b_1)W_2+b_2
-$$
+```math
+\mathrm{FFN}(x)=\phi(xW_1+b_1)W_2+b_2
+```
 
-常见维度路径为 $d\rightarrow d_{ff}\rightarrow d$。FFN 对每个位置独立计算，参数在位置之间共享；跨位置的信息已由 Attention 混入。现代模型常用门控变体如 SwiGLU。
+
+常见维度路径为 $`d\rightarrow d_{ff}\rightarrow d`$。FFN 对每个位置独立计算，参数在位置之间共享；跨位置的信息已由 Attention 混入。现代模型常用门控变体如 SwiGLU。
 
 ## 输出头
 
-最后的隐藏状态乘以输出权重，得到 $[B,T,V]$ 的 logits。训练时通常对许多位置计算损失；生成下一个 Token 时一般读取最后一个有效输入位置的 logits。
+最后的隐藏状态乘以输出权重，得到 $`[B,T,V]`$ 的 logits。训练时通常对许多位置计算损失；生成下一个 Token 时一般读取最后一个有效输入位置的 logits。
 
 部分模型将输出头权重与输入 Embedding 共享，称为 weight tying。这是参数共享选择，不是所有模型的要求。
 
 ## 形状核对表
 
-假设普通 MHA，$d=h d_h$：
+假设普通 MHA，$`d=h d_h`$：
 
 | 计算 | 形状 |
 | --- | --- |
-| 隐藏状态 | $[B,T,d]$ |
-| 拆头后的 Q/K/V | $[B,h,T,d_h]$ |
-| 分数与注意力权重 | $[B,h,T,T]$ |
-| 每头输出 | $[B,h,T,d_h]$ |
-| 拼接与输出投影 | $[B,T,d]$ |
-| FFN 中间激活 | $[B,T,d_{ff}]$ |
-| 词表 logits | $[B,T,V]$ |
+| 隐藏状态 | `[B,T,d]` |
+| 拆头后的 Q/K/V | `[B,h,T,d_h]` |
+| 分数与注意力权重 | `[B,h,T,T]` |
+| 每头输出 | `[B,h,T,d_h]` |
+| 拼接与输出投影 | `[B,T,d]` |
+| FFN 中间激活 | `[B,T,d_ff]` |
+| 词表 logits | `[B,T,V]` |
 
-高效实现可能不显式存储完整 $T\times T$ 矩阵，数学意义仍可用此表理解。
+高效实现可能不显式存储完整 $`T\times T`$ 矩阵，数学意义仍可用此表理解。
 
 ## 参数量怎样粗算？
 
-普通 MHA 的 Q/K/V/O 投影约有 $4d^2$ 个参数，两矩阵 FFN 约有 $2dd_{ff}$ 个参数，省略偏置和归一化。如果 $d_{ff}=4d$，每层约为 $12d^2$。
+普通 MHA 的 Q/K/V/O 投影约有 $`4d^2`$ 个参数，两矩阵 FFN 约有 $`2dd_{ff}`$ 个参数，省略偏置和归一化。如果 $`d_{ff}=4d`$，每层约为 $`12d^2`$。
 
-例如 $d=512$、$L=12$、$V=32,000$：Transformer 层约 37.75M 参数，输入 Embedding 约 16.38M；若输入与输出权重共享，总体约 54.13M，再加少量其他参数。不共享输出头，则再增加约 16.38M。
+例如 $`d=512`$、$`L=12`$、$`V=32,000`$：Transformer 层约 37.75M 参数，输入 Embedding 约 16.38M；若输入与输出权重共享，总体约 54.13M，再加少量其他参数。不共享输出头，则再增加约 16.38M。
 
 这是教学模型的近似。GQA 会改变 K/V 投影规模，SwiGLU 有三组主要 FFN 矩阵，MoE 需要计入所有专家。不能用一个近似公式套所有模型。
 
@@ -132,6 +138,6 @@ $$
 
 1. Attention 与 FFN 各自如何处理位置之间的信息？
 2. 为什么训练可同时计算多个位置，生成却通常逐 Token 进行？
-3. 输出头为何产生 $V$ 个分数，而不是直接产生一个汉字？
+3. 输出头为何产生 $`V`$ 个分数，而不是直接产生一个汉字？
 
 [答案](misconceptions-and-answers.md) · 依据：[Transformer 原论文](references.md)

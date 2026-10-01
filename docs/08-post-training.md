@@ -42,12 +42,13 @@ RLHF 是一类利用人类反馈的流程；PPO 是可用的强化学习算法�
 
 ## LoRA：训练少量增量参数
 
-对权重 $W\in\mathbb{R}^{d_{in}\times d_{out}}$，一种行向量约定下的写法是：
+对权重 $`W\in\mathbb{R}^{d_{in}\times d_{out}}`$，一种行向量约定下的写法是：
 
-$$
+```math
 W'=W+\frac{\alpha}{r}AB,
 \quad A\in\mathbb{R}^{d_{in}\times r},\ B\in\mathbb{R}^{r\times d_{out}}
-$$
+```
+
 
 冻结基础权重，只训练低秩增量。不同资料可能采用转置后的权重约定，思想相同。
 

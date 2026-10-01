@@ -4,7 +4,7 @@
 
 ## 当前交付状态
 
-文档远程仓库为 [miauyle/llm-architecture-guide](https://github.com/miauyle/llm-architecture-guide)，正文位于 `main` 分支。文档通过现有 GPT–GitHub 授权提交，未要求用户额外提供个人 Token。
+文档远程仓库为 [miauyle/ai-systems-architecture-guide](https://github.com/miauyle/ai-systems-architecture-guide)，正文位于 `main` 分支。文档通过现有 GPT–GitHub 授权提交，未要求用户额外提供个人 Token。
 
 当前交付包含源码仓库与 Markdown 文件，尚未配置 GitHub Pages 主题或部署网站。
 
@@ -15,7 +15,7 @@
 解压 ZIP 后可以初始化 Git；直接使用已初始化的工作区目录时，跳过初始化。先确认安装 Git；若使用 GitHub CLI，还需已有 GitHub 登录。
 
 ```bash
-cd llm-architecture-guide
+cd ai-systems-architecture-guide
 # 仅当解压后的目录没有 .git 时执行下面三行
 git init -b main
 git add .
@@ -25,7 +25,7 @@ git commit -m "docs: add Chinese LLM architecture guide"
 使用 GitHub CLI 创建并推送私有仓库的一种方式：
 
 ```bash
-gh repo create llm-architecture-guide --private --source=. --remote=origin --push
+gh repo create ai-systems-architecture-guide --private --source=. --remote=origin --push
 ```
 
 `--private` 可按你的分享意图改成 `--public`。如果希望发布到组织账号，应明确完整的 `组织名/仓库名`。仓库已经存在时，不要再次创建；可以添加该仓库提供的远程地址后推送。

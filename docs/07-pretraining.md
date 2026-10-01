@@ -42,9 +42,10 @@ flowchart LR
 
 常见损失为有效目标位置的平均负对数概率：
 
-$$
+```math
 \mathcal{L}=-\frac{1}{N_{valid}}\sum_{(b,t)\in valid}\log p_\theta(x_{b,t+1}\mid x_{b,\le t})
-$$
+```
+
 
 Padding 或某些任务指定的位置可从损失中排除。Attention Mask 和 Loss Mask 解决不同问题：一个控制能看什么，一个控制在哪些位置学习。
 
@@ -67,7 +68,7 @@ Padding 或某些任务指定的位置可从损失中排除。Attention Mask 和
 
 ## 规模、计算与数据
 
-对普通稠密 Transformer，粗略训练计算估算常用 $6ND$，其中 $N$ 为参数量、$D$ 为训练 Token 数；这是常用近似，不是精确账单。
+对普通稠密 Transformer，粗略训练计算估算常用 $`6ND`$，其中 $`N`$ 为参数量、$`D`$ 为训练 Token 数；这是常用近似，不是精确账单。
 
 序列长度、注意力计算、词表、重计算、MoE 和实现都会改变成本。Scaling laws 研究资源与损失的规律，但不保证具体业务指标按同一关系改善。
 
