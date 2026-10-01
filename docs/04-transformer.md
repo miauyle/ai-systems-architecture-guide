@@ -1,0 +1,137 @@
+# 04 · Transformer 的完整计算路径
+
+[返回目录](../README.md) · [下一章](05-attention-walkthrough.md)
+
+## 一个位置如何获得上下文
+
+可以把每个 Token 的隐藏状态看作一份不断更新的特征记录。Attention 让它从允许访问的位置吸收信息；FFN 对每个位置做特征变换。多层堆叠不断组合这些信息。
+
+这只是理解数据流的类比：网络并没有显式的「记录对象」，隐藏向量也不是可直接读出的知识表。
+
+## Decoder-only 主线
+
+下面采用常见的 Pre-Norm 结构；这是教学主线，具体模型可能采用其他归一化、位置和 FFN 设计。
+
+```mermaid
+flowchart TD
+    I[Token IDs] --> E[Embedding]
+    E --> X[隐藏状态 X]
+    X --> N1[Norm]
+    N1 --> A[因果 Self-Attention]
+    X --> R1[残差相加]
+    A --> R1
+    R1 --> N2[Norm]
+    N2 --> F[FFN / MLP]
+    R1 --> R2[残差相加]
+    F --> R2
+    R2 --> L[重复 L 层]
+    L --> N3[最终 Norm]
+    N3 --> H[输出投影 / LM Head]
+    H --> P[词表 logits 与概率]
+```
+
+一层可写为：
+
+$$
+U=X+\operatorname{Attention}(\operatorname{Norm}(X))
+$$
+$$
+Y=U+\operatorname{FFN}(\operatorname{Norm}(U))
+$$
+
+位置机制在注意力或输入等处应用，取决于实现。图中没有把它强行限定在某一个位置。
+
+## Q、K、V：怎样计算关联
+
+对单个头，先用三组可学习权重把隐藏状态映射为：
+
+$$
+Q=XW_Q,\quad K=XW_K,\quad V=XW_V
+$$
+
+- Q：当前位置用于匹配信息的查询特征。
+- K：各位置用于被匹配的键特征。
+- V：各位置用于汇总的值特征。
+
+Q/K/V 来自学习到的投影；不是人类写的查询语句或数据库主键。经典缩放点积注意力是：
+
+$$
+A=\operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_h}}+M\right),\qquad Z=AV
+$$
+
+Softmax 沿每个查询对应的键位置进行。$M$ 是 Mask：允许位置取 0，不允许的位置概念上取负无穷，从而让其权重为 0。
+
+除以 $\sqrt{d_h}$ 是为了控制点积分数的尺度，减轻较大维度时 Softmax 过于饱和的问题。
+
+## 因果 Mask
+
+位置 $t$ 预测下一个 Token 时，只能使用当前位置及其之前的输入，不能读取未来位置。
+
+```text
+          键位置
+          1  2  3  4
+查询 1    ✓  ×  ×  ×
+查询 2    ✓  ✓  ×  ×
+查询 3    ✓  ✓  ✓  ×
+查询 4    ✓  ✓  ✓  ✓
+```
+
+训练时整个已知序列可以并行输入，依靠 Mask 保证每个位置不偷看未来。生成时未来 Token 尚未产生，因此必须逐步继续生成。
+
+## 多头注意力
+
+在常规多头设计中，多个头分别学习不同的投影，输出拼接后再由 $W_O$ 投影回隐藏维度：
+
+$$
+\operatorname{MHA}(X)=\operatorname{Concat}(Z_1,\ldots,Z_h)W_O
+$$
+
+它增加了不同特征子空间中的信息组合能力，但不能假设每个头都对应固定语法或某种人类可解释功能。
+
+## FFN / MLP
+
+经典 FFN 为：
+
+$$
+\operatorname{FFN}(x)=\phi(xW_1+b_1)W_2+b_2
+$$
+
+常见维度路径为 $d\rightarrow d_{ff}\rightarrow d$。FFN 对每个位置独立计算，参数在位置之间共享；跨位置的信息已由 Attention 混入。现代模型常用门控变体如 SwiGLU。
+
+## 输出头
+
+最后的隐藏状态乘以输出权重，得到 $[B,T,V]$ 的 logits。训练时通常对许多位置计算损失；生成下一个 Token 时一般读取最后一个有效输入位置的 logits。
+
+部分模型将输出头权重与输入 Embedding 共享，称为 weight tying。这是参数共享选择，不是所有模型的要求。
+
+## 形状核对表
+
+假设普通 MHA，$d=h d_h$：
+
+| 计算 | 形状 |
+| --- | --- |
+| 隐藏状态 | $[B,T,d]$ |
+| 拆头后的 Q/K/V | $[B,h,T,d_h]$ |
+| 分数与注意力权重 | $[B,h,T,T]$ |
+| 每头输出 | $[B,h,T,d_h]$ |
+| 拼接与输出投影 | $[B,T,d]$ |
+| FFN 中间激活 | $[B,T,d_{ff}]$ |
+| 词表 logits | $[B,T,V]$ |
+
+高效实现可能不显式存储完整 $T\times T$ 矩阵，数学意义仍可用此表理解。
+
+## 参数量怎样粗算？
+
+普通 MHA 的 Q/K/V/O 投影约有 $4d^2$ 个参数，两矩阵 FFN 约有 $2dd_{ff}$ 个参数，省略偏置和归一化。如果 $d_{ff}=4d$，每层约为 $12d^2$。
+
+例如 $d=512$、$L=12$、$V=32,000$：Transformer 层约 37.75M 参数，输入 Embedding 约 16.38M；若输入与输出权重共享，总体约 54.13M，再加少量其他参数。不共享输出头，则再增加约 16.38M。
+
+这是教学模型的近似。GQA 会改变 K/V 投影规模，SwiGLU 有三组主要 FFN 矩阵，MoE 需要计入所有专家。不能用一个近似公式套所有模型。
+
+## 自测
+
+1. Attention 与 FFN 各自如何处理位置之间的信息？
+2. 为什么训练可同时计算多个位置，生成却通常逐 Token 进行？
+3. 输出头为何产生 $V$ 个分数，而不是直接产生一个汉字？
+
+[答案](misconceptions-and-answers.md) · 依据：[Transformer 原论文](references.md)
