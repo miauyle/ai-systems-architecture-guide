@@ -76,7 +76,8 @@ const report = { checks: [], errors: [] };
       assert.equal(await page.locator('[data-tex] .katex').count(), math, item.path);
       assert.equal(await page.locator('.mermaid svg').count(), (source.match(/```mermaid/g) || []).length, item.path);
       assert.equal(await page.locator('#sidebar .sidebar__nav .sidebar__link.is-active').count(), 1, item.path);
-      assert.ok(await page.locator('#tocNav a').count() >= 2, item.path);
+      const headings = (source.match(/^#{2,3} /gm) || []).length;
+      assert.equal(await page.locator('#tocNav a').count(), headings >= 2 ? headings : 0, item.path);
       for (const link of await page.locator('.doc-pager a').evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))) {
         assert.ok(link && link.startsWith('/ai-systems-notes/docs/'), 'Pager URL');
       }
