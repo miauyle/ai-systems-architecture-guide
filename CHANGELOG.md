@@ -1,5 +1,10 @@
 # 更新记录
 
+## AI 助手协作规范 · 2026-10-01
+
+- 新增根目录 `AGENTS.md`，约定知识范围、写作与引用、Markdown、验证和 GitHub 同步规则。
+- 在 README 仓库结构和贡献说明中加入协作指引入口。
+
 ## 远程仓库交付 · 2026-10-01
 
 - 文档提交到 `miauyle/llm-architecture-guide` 的 `main` 分支。

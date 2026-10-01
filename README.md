@@ -77,6 +77,7 @@ llm-architecture-guide/
 ├── README.md
 ├── docs/                 # 中文教程、图解、练习和资料
 ├── templates/            # 学习检查清单、架构决策与评估记录
+├── AGENTS.md             # AI 助手协作与验证规则
 ├── CONTRIBUTING.md       # 文档修改约定
 ├── CHANGELOG.md
 └── .gitignore
