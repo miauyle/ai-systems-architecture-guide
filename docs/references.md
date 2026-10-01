@@ -51,6 +51,23 @@
 | [LLaVA / Visual Instruction Tuning](https://arxiv.org/abs/2304.08485) | 2023 | 视觉与语言连接、指令训练 | 编码器与投影结构 |
 | [DeepSeek-R1](https://arxiv.org/abs/2501.12948) | 2025 | 推理训练的公开实例 | 训练策略与评估限制 |
 
+## 深入机制的资料
+
+| 资料 | 年份 | 对应内容 |
+| --- | --- | --- |
+| [Adam](https://arxiv.org/abs/1412.6980) | 2014 | 一阶/二阶矩、偏差修正与优化更新 |
+| [Decoupled Weight Decay Regularization](https://arxiv.org/abs/1711.05101) | 2017 | AdamW 与权重衰减 |
+| [Dense Passage Retrieval](https://arxiv.org/abs/2004.04906) | 2020 | 稠密检索的训练与评估 |
+| [Sentence-BERT](https://arxiv.org/abs/1908.10084) | 2019 | 句向量与相似度任务 |
+| [BM25 综述](https://doi.org/10.1561/1500000019) | 2009 | 词频、逆文档频率与长度归一化 |
+| [Reciprocal Rank Fusion](https://doi.org/10.1145/1571941.1572114) | 2009 | 基于名次的检索融合 |
+| [HNSW](https://arxiv.org/abs/1603.09320) | 2016 | 近似最近邻与图索引 |
+| [Tree of Thoughts](https://arxiv.org/abs/2305.10601) | 2023 | 多候选搜索与选择机制的实例 |
+| [Reflexion](https://arxiv.org/abs/2303.11366) | 2023 | 反馈与记忆机制的研究实例 |
+| [MemGPT](https://arxiv.org/abs/2310.08560) | 2023 | 上下文与外部记忆管理的实例 |
+
+这些论文是具体方案，不能由某个实验结果推断所有 Agent 或业务任务都有效。仓库中的教学代码独立用于解释机制，不是上述项目的复现。
+
 ## 官方实现与学习工具
 
 - [Hugging Face Transformers 文档](https://huggingface.co/docs/transformers/index)：模型配置、Tokenizer、生成与部署接口。
@@ -59,6 +76,8 @@
 - [vLLM 文档](https://docs.vllm.ai/)：服务配置、支持的模型与运行条件。
 - [SentencePiece 项目](https://github.com/google/sentencepiece)：Tokenization 工具。
 - [GitHub Markdown 文档](https://docs.github.com/en/get-started/writing-on-github)：公式、Mermaid 与 Markdown 阅读方式。
+- [MCP 规范](https://modelcontextprotocol.io/specification/latest)：工具与资源的协议约定；版本随规范演进。
+- [LangGraph 文档](https://docs.langchain.com/oss/python/langgraph/overview)：状态、图编排和运行时机制的实现入口。
 
 官方文档会更新，实验时应记录所用版本。论文年份按本表所链接预印本的首次发布年份，可能与会议发表年份不同。
 
