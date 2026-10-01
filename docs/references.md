@@ -2,7 +2,7 @@
 
 [返回目录](../README.md)
 
-本表提供稳定知识的原始资料入口，不是实时模型榜单。链接指向论文或官方项目；本版未逐一联网检查外链可访问性。仓库内相对文件链接已通过交付检查。
+本表提供稳定知识的原始资料入口，不是实时模型榜单。关键原理在对应章节解释，资料用于追溯依据。2026-10-01 核对了本次新增的生成模型、配置、硬件与安全入口，以及本次展开的部分核心论文；未对所有历史外链逐一确认。官方接口和支持条件以所用版本为准。
 
 ## 核心结构与表示
 
@@ -66,9 +66,9 @@
 | [Reflexion](https://arxiv.org/abs/2303.11366) | 2023 | 反馈与记忆机制的研究实例 |
 | [MemGPT](https://arxiv.org/abs/2310.08560) | 2023 | 上下文与外部记忆管理的实例 |
 
-这些论文是具体方案，不能由某个实验结果推断所有 Agent 或业务任务都有效。仓库中的教学代码独立用于解释机制，不是上述项目的复现。
+这些论文是具体方案，不能由某个实验结果推断所有 Agent 或业务任务都有效。正文描述机制与适用边界，不宣称复现上述项目。
 
-## 官方实现与学习工具
+## 官方实现与文档
 
 - [Hugging Face Transformers 文档](https://huggingface.co/docs/transformers/index)：模型配置、Tokenizer、生成与部署接口。
 - [Hugging Face Tokenizers 文档](https://huggingface.co/docs/tokenizers/index)：实际切分、编码和训练流程。
@@ -79,10 +79,43 @@
 - [MCP 规范](https://modelcontextprotocol.io/specification/latest)：工具与资源的协议约定；版本随规范演进。
 - [LangGraph 文档](https://docs.langchain.com/oss/python/langgraph/overview)：状态、图编排和运行时机制的实现入口。
 
-官方文档会更新，实验时应记录所用版本。论文年份按本表所链接预印本的首次发布年份，可能与会议发表年份不同。
+官方文档会更新，使用具体接口时记录版本。论文年份按本表所链接预印本的首次发布年份，可能与会议发表年份不同。
 
 ## 怎样读论文更省力？
 
 先看问题、架构图、输入输出和实验设置，再读公式。检查结论适用的模型规模、数据、硬件与负载，不把论文中的某个加速倍数当作所有环境的保证。
 
-初学顺序建议：Transformer → GQA → LoRA → InstructGPT → FlashAttention / PagedAttention → RAG。算法方向再深入损失推导，工程方向优先跟踪形状、资源和测量条件。
+资料按专题使用，阅读关系见[知识地图](00-learning-roadmap.md)。不要求按论文列表逐篇完成。
+
+## 通用学习与生成家族
+
+| 资料 | 年份 | 对应主题 |
+| --- | --- | --- |
+| [Deep Learning](https://www.deeplearningbook.org/) | 2016 | 学习目标、表示、泛化与优化基础 |
+| [scikit-learn 模型选择](https://scikit-learn.org/stable/model_selection.html) | 持续更新 | 数据划分、模型选择与评估 |
+| [scikit-learn 常见问题](https://scikit-learn.org/stable/common_pitfalls.html) | 持续更新 | 预处理与数据泄漏 |
+| [Auto-Encoding Variational Bayes](https://arxiv.org/abs/1312.6114) | 2013 | VAE 的编码、潜在分布与解码 |
+| [Generative Adversarial Networks](https://arxiv.org/abs/1406.2661) | 2014 | 生成器与判别器的对抗学习 |
+| [Denoising Diffusion Probabilistic Models](https://arxiv.org/abs/2006.11239) | 2020 | 扩散训练与采样 |
+| [Latent Diffusion Models](https://arxiv.org/abs/2112.10752) | 2021 | 潜在空间中的生成与条件 |
+| [Flow Matching for Generative Modeling](https://arxiv.org/abs/2210.02747) | 2022 | 概率路径与向量场学习 |
+| [CLIP](https://arxiv.org/abs/2103.00020) | 2021 | 图文表示与对比学习 |
+
+对应正文：[机器学习基础](23-machine-learning-foundations.md)、[生成模型](24-generative-models.md)、[多模态](13-multimodal-and-reasoning.md)。
+
+## 资产、基础设施与安全
+
+| 官方资料 | 支持的知识关系 |
+| --- | --- |
+| [Hugging Face 模型配置](https://huggingface.co/docs/transformers/main_classes/configuration) | 配置与模型资产 |
+| [Hugging Face 聊天模板](https://huggingface.co/docs/transformers/chat_templating) | 消息序列与训练格式 |
+| [CUDA 编程指南](https://docs.nvidia.com/cuda/cuda-programming-guide/) | 加速器执行与内存层级 |
+| [NCCL](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/) | 集体通信与设备拓扑 |
+| [GPUDirect RDMA](https://docs.nvidia.com/cuda/gpudirect-rdma/) | 网卡与 GPU 的直接路径及支持条件 |
+| [GPUDirect Storage](https://docs.nvidia.com/gpudirect-storage/overview-guide/index.html) | 存储与 GPU 数据路径 |
+| [Faiss](https://github.com/facebookresearch/faiss/wiki) | 向量索引、近似与压缩 |
+| [MCP 2025-06-18 架构](https://modelcontextprotocol.io/specification/2025-06-18/architecture) | host、client、server 与连接能力 |
+| [OWASP GenAI](https://genai.owasp.org/) | 提示注入、权限与应用安全 |
+| [NIST AI RMF](https://www.nist.gov/itl/ai-risk-management-framework) | 系统风险与治理关系 |
+
+对应正文：[模型生命周期](26-model-lifecycle.md)、[计算基础设施](27-compute-infrastructure.md)、[安全边界](25-ai-security.md)。这些入口的存在不代表所有平台组合都受支持，部署时仍须核对实际版本。

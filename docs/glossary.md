@@ -43,3 +43,23 @@
 | Test-time compute | 测试时计算预算 | 更多计算不保证更准确 | [13](13-multimodal-and-reasoning.md) |
 
 缩写的实际含义可能随论文或框架变化。阅读配置时应以对应实现为准。
+
+## 基础、生成与系统资产
+
+| 术语 | 含义与边界 | 正文 |
+| --- | --- | --- |
+| Generalization | 泛化，对未见输入的表现；训练拟合不等于泛化 | [23](23-machine-learning-foundations.md) |
+| Self-supervised learning | 自监督，从数据构造目标；仍有学习信号 | [23](23-machine-learning-foundations.md) |
+| Calibration | 校准，置信度与实际正确比例的关系 | [23](23-machine-learning-foundations.md) |
+| Data lineage | 数据血缘，来源与派生处理关系 | [15](15-data-lifecycle.md) |
+| VAE | 变分自编码器，学习可采样的潜在表示 | [24](24-generative-models.md) |
+| GAN | 生成对抗网络，生成器与判别器共同训练 | [24](24-generative-models.md) |
+| Diffusion | 扩散生成，训练与采样采用噪声相关机制 | [24](24-generative-models.md) |
+| Flow Matching | 流匹配，学习分布路径上的向量场 | [24](24-generative-models.md) |
+| Arithmetic intensity | 算术强度，每字节数据对应的运算量 | [27](27-compute-infrastructure.md) |
+| RDMA | 远端内存访问；不自动替代应用协议 | [27](27-compute-infrastructure.md) |
+| Prompt injection | 不可信内容改变模型指令处理 | [25](25-ai-security.md) |
+| Model artifact | 模型资产，包含权重及匹配配置与处理器 | [26](26-model-lifecycle.md) |
+| Checkpoint | 检查点，推理导出与训练恢复所需内容不同 | [17](17-training-engineering.md) |
+| Idempotency | 幂等，同一业务意图重试不重复产生效果 | [20](20-agent-runtime.md) |
+| MCP | 工具与资源连接协议；不是完整任务运行时 | [21](21-agent-planning-and-memory.md) |
