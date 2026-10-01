@@ -2,5 +2,13 @@
 __pycache__/
 *.pyc
 .env
+_site/
+.jekyll-cache/
+.jekyll-metadata
+.bundle/
+vendor/
+assets/vendor/katex/
+assets/vendor/mermaid/
+site-qa/
 .env.*
 !.env.example

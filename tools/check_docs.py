@@ -92,7 +92,13 @@ def main():
     errors = []
     check_navigation(errors)
     display_count = inline_count = 0
-    files = sorted(ROOT.rglob("*.md"))
+    # Only maintained sources, not Bundler/vendor files or generated site output.
+    files = sorted([
+        *ROOT.glob("*.md"),
+        *(ROOT / "docs").rglob("*.md"),
+        *(ROOT / "maintenance").rglob("*.md"),
+        *(ROOT / "templates").rglob("*.md"),
+    ])
     for path in files:
         if ".git" in path.parts:
             continue

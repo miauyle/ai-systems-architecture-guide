@@ -16,7 +16,7 @@
 
 标题层次清楚，文件链接使用相对路径，图用 Mermaid，比较用表格。维护流程放在 `maintenance/`，工程记录模板放在 `templates/`。术语表只承担查询，不替代章节解释。
 
-主题尚未选定，不增加网站依赖。未来适配要求见 [Pages 准备说明](maintenance/publishing.md)。
+网站复用系列站的 Jekyll + DocSteer，正文和 `navigation.json` 是唯一内容源；构建插件生成页面与侧栏，不编辑生成的副本。首页专题快捷入口在 `_data/core_topics.yml`，分组仍由导航 JSON 决定。构建与检查方式见 [Pages 发布说明](maintenance/publishing.md)。
 
 ## 检查与交付
 
