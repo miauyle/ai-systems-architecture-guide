@@ -86,4 +86,4 @@ llm-architecture-guide/
 
 后续可将这些 Markdown 接入 GitHub Pages 文档主题。选定主题后再配置站点导航、数学公式、Mermaid 和部署流程；当前交付尚未包含网站主题或 Pages 部署。
 
-若需要自行发布，参见[GitHub 发布说明](docs/publishing.md)。本地仓库与远程 GitHub 仓库是两个交付状态，是否已发布以实际远程链接为准。
+远程仓库：[miauyle/llm-architecture-guide](https://github.com/miauyle/llm-architecture-guide)，文档分支为 `main`。仓库提交与 GitHub Pages 网站部署是两个状态，当前尚未配置 Pages。后续发布方式参见[GitHub 发布说明](docs/publishing.md)。

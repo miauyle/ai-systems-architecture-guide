@@ -4,11 +4,13 @@
 
 ## 当前交付状态
 
-本交付包含本地 Git 仓库和 Markdown 文件。没有提供远程仓库 URL，也没有完成远程发布。
+文档远程仓库为 [miauyle/llm-architecture-guide](https://github.com/miauyle/llm-architecture-guide)，正文位于 `main` 分支。文档通过现有 GPT–GitHub 授权提交，未要求用户额外提供个人 Token。
+
+当前交付包含源码仓库与 Markdown 文件，尚未配置 GitHub Pages 主题或部署网站。
 
 云端 Codex 的连接器授权与终端 Git 凭据是两个配置层，参见[GitHub 连接说明](github-connection.md)。后续 GitHub Pages 的主题与发布配置在选定主题后添加。
 
-## 在你自己的机器发布
+## 在其他账号建立副本
 
 解压 ZIP 后可以初始化 Git；直接使用已初始化的工作区目录时，跳过初始化。先确认安装 Git；若使用 GitHub CLI，还需已有 GitHub 登录。
 
