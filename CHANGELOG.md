@@ -1,5 +1,15 @@
 # 更新记录
 
+## 2026-10-03 · 补齐 AI Systems 执行中间层
+
+- 新增 28 Compiler / Runtime：Eager、图捕获/中断、动态形状、Dynamo/AOTAutograd/Inductor、IR、融合、内存规划、编译缓存/调优、Kernel 提交与 CUDA Graph；区分 Triton、CUDA 和 FlashAttention。
+- 深化 17 Training：Device Mesh、DTensor placement、FSDP2、TP/SP/CP/PP/EP 的切分对象与组合，展开 CP 的跨位置 K/V 和梯度通信，以及 distributed checkpoint 在新拓扑下 reshard/resume。
+- 深化 10/18 Serving 与 Inference：Gateway、KV-aware Router、P/D 池、KV transfer、执行所有权、远端/卸载状态就绪、路由目标冲突、fleet 弹性与冷启动；保持与 AI Storage Notes 的底层存储分工。
+- 新增 29 Cluster Scheduling：Workload 到 Job/Deployment 和 GPU/NIC/存储 placement，组调度、异构设备、配额、抢占、租户、失败恢复与副本生命周期。
+- 新增 30 Performance：统一延迟/TTFT/TPOT/ITL、分位、有效吞吐、容量、Roofline/Amdahl/Little、排队、重叠、locality、成本与 SLO-driven capacity planning。
+- 保留六大分组、现有主题与文件路径；同步地图、全景、README、完整目录、导航摘要、首页入口、生产交叉链接、术语与官方/原始资料；专题止于 30。
+- 首页浏览器检查按现有配置读取核心入口数量，页数报告来自实际导航，避免新增正文后保留旧数量。
+
 ## 2026-10-01 · 复用系列文档站 UI，建立知识地图首页
 
 - 复用另外两个知识站的 Jekyll + DocSteer 1.1.1、aqua 配色、导航、搜索、模式切换、正文排版与侧栏交互，不改正文目录和技术栈。

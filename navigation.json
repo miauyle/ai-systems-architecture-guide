@@ -100,7 +100,7 @@
           "id": "training-engineering",
           "title": "17 · 训练系统：优化、并行与恢复",
           "path": "docs/17-training-engineering.md",
-          "summary": "累积归一化、梯度通信、参数取回与一致恢复"
+          "summary": "梯度更新、Mesh/DTensor、并行组合、CP 与分片恢复"
         }
       ]
     },
@@ -124,19 +124,37 @@
           "id": "serving-and-distributed",
           "title": "10 · 推理服务与分布式架构",
           "path": "docs/10-serving-and-distributed.md",
-          "summary": "请求生命周期、TP 矩阵切分与分布式交接"
+          "summary": "请求生命周期、KV 所有权、P/D 池、集群路由与弹性"
         },
         {
           "id": "inference-engineering",
           "title": "18 · 推理引擎内部、容量与调度",
           "path": "docs/18-inference-engineering.md",
-          "summary": "逻辑块映射、前缀共享、预算与验证状态提交"
+          "summary": "分页与前缀共享、remote KV、迭代预算与执行就绪"
         },
         {
           "id": "compute-infrastructure",
           "title": "27 · AI 计算基础设施与数据路径",
           "path": "docs/27-compute-infrastructure.md",
           "summary": "缓冲传输、数据复用、集体通信与资源关键路径"
+        },
+        {
+          "id": "ai-compiler-and-runtime",
+          "title": "28 · AI Compiler、Runtime 与 Kernel 执行栈",
+          "path": "docs/28-ai-compiler-and-runtime.md",
+          "summary": "图捕获、IR、融合、编译缓存与 Kernel 执行"
+        },
+        {
+          "id": "ai-platform-and-cluster-scheduling",
+          "title": "29 · AI Platform、GPU Cluster 与资源调度",
+          "path": "docs/29-ai-platform-and-cluster-scheduling.md",
+          "summary": "GPU/NIC 拓扑、组调度、租户与副本生命周期"
+        },
+        {
+          "id": "ai-systems-performance",
+          "title": "30 · AI Systems 性能模型、SLO 与容量分析",
+          "path": "docs/30-ai-systems-performance.md",
+          "summary": "延迟、有效吞吐、关键路径、SLO 与容量成本"
         }
       ]
     },

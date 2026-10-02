@@ -114,6 +114,8 @@ Hit@k 可只判断是否命中至少一个正确项；MRR 关注第一个相关�
 
 容量判断包括长度分布、突发、长请求、取消、模型预热和缓存状态。只测稳定短请求无法证明生产容量。拒绝率、重试与超时也是体验指标，不应只保留成功请求统计。
 
+统一的 TTFT、TPOT/ITL、分位延迟、useful throughput 与 SLO-driven capacity planning 见[第 30 章](30-ai-systems-performance.md)。发布时固定 Compiler/Runtime 与引擎版本，记录图/编译冷热和资源 placement；这些因素会让同模型同精度表现不同。执行栈见[第 28 章](28-ai-compiler-and-runtime.md)，GPU/NIC 调度、组级就绪与扩缩容见[第 29 章](29-ai-platform-and-cluster-scheduling.md)。
+
 ## 故障恢复与发布结果
 
 进程恢复、业务对账、缓存回收和权限撤销需要独立检查。任务最终成功不能掩盖中间越权或重复写入；重试后得到一个答案，也不证明状态已经正确恢复。

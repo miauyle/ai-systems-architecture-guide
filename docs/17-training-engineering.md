@@ -72,9 +72,71 @@ FSDP 的包装粒度、reshard 与预取策略会改变细节。计算一层时�
 
 TP 的前向矩阵切分见[第 10 章](10-serving-and-distributed.md)，训练还要对相应梯度和激活执行反向通信。PP 将微批次激活传给下一阶段，反向梯度沿反向路径回来；交错前向/反向减少气泡，也改变各阶段保存的激活数量与更新时机。
 
-上下文并行分担序列位置，但全注意力查询仍需要有关的其他位置 K/V，要用通信或分块轮转保持全局信息关系；不能把长文本独立切段后声称执行了原来的全注意力。EP 则将 Token 发给专家，反向还需返回梯度并处理专家参数的相应同步。
+EP 将 Token 发给专家，反向还需返回梯度并处理专家参数的相应同步。长序列的切分则需要区分下面的 Sequence Parallel 与 Context Parallel，不能把长文本独立切段后声称执行了原来的全注意力。
 
 并行分组按数据、矩阵、层、序列或专家维度定义；有效全局批次只由实际独立数据贡献决定，不能把每一种并行卡数都乘进样本量。通信语义与拓扑见[第 27 章](27-compute-infrastructure.md)。
+
+## Device Mesh 与 DTensor：先声明张量归属，再运行通信
+
+Device Mesh 是 rank 的逻辑多维组织。某个轴可以承担 DP/FSDP，另一个轴承担 TP，再由训练系统组织 CP、PP 等分组。Mesh 轴不是张量轴：`tp` 是参与者集合，`Shard(dim)` 才说明一个张量沿哪个维度分片。逻辑相邻也不保证物理相邻，实际 rank 到 GPU、节点、NIC 的映射见[集群调度](29-ai-platform-and-cluster-scheduling.md)。
+
+DTensor 描述一个全局逻辑张量、它所属的 Mesh，以及相对每条 Mesh 轴的 placement。每个 rank 持有本地张量，布局信息让操作可以推断输出归属和必要通信，不表示每个 rank 都有全局完整值。
+
+| Placement | 本地状态代表什么 | 后续消费的要求 |
+| --- | --- | --- |
+| Replicate | 该 Mesh 轴上的 rank 持有同一逻辑值 | 不把重复副本算成独立样本贡献 |
+| Shard(dim) | 沿全局张量的指定维度持有一段 | 消费者若需要全值，要 gather 或改用分片算法 |
+| Partial | 持有尚未归约的局部贡献 | 要得到逻辑完整值，需按指定归约消除 Partial |
+
+第 10 章行并行投影的 `Y_i` 就是局部贡献；拼接不能替代求和。布局从 Shard 改为 Replicate 常涉及 all-gather，Partial 改为 Shard 可涉及 reduce-scatter。具体转换依赖布局、算子与实现，不能将每次 `redistribute` 都视作免费元数据修改。
+
+框架传播布局，但程序仍需定义匹配的模型切分、损失归一化和通信组。各 rank 不一致的 Mesh 定义或 collective 顺序会导致错误/挂起。官方依据：[DeviceMesh](https://docs.pytorch.org/docs/stable/distributed.html#devicemesh)、[DTensor](https://docs.pytorch.org/docs/stable/distributed.tensor.html)。具体支持的算子与 placement 组合可能变化。
+
+## FSDP2：逐参数分片与计算前取回
+
+前面的生命周期仍适用于 FSDP2：静止时拥有分片，计算前取回所需权重，反向后将梯度分发给分片所有者，再更新其优化器状态。与 FSDP1 常见的参数展平/拼接管理不同，FSDP2 使用逐参数 DTensor 表达分片，使参数名称、形状与分片布局更容易与 TP 和 checkpoint 对接。
+
+这里分片的是训练状态，不是把该层矩阵乘自动变成 TP。在某个 TP rank 已拥有一个矩阵分片的组合中，FSDP 还可沿另一 Mesh 轴分片这份状态；计算前 gather 回的是本 TP 分片所需的参数，并非必然恢复整个模型矩阵到每张 GPU。
+
+计算单元粒度、反向取回、reshard、预取与混合精度策略决定临时完整权重何时存活。DTensor 不会消除 gather，也不会使峰值显存严格等于总参数除以卡数。FSDP2 的逐参数布局和组合关系见[官方 fully_shard 文档](https://docs.pytorch.org/docs/stable/distributed.fsdp.fully_shard.html)；接口和支持条件以实际 PyTorch 版本为准。
+
+## 一张表看清到底切什么
+
+以激活逻辑形状 `X[B,S,H]` 为参照，B 是样本，S 是序列位置，H 是隐藏特征。不同论文对 SP 的范围命名不完全相同；下表的 SP 采用 Megatron/PyTorch TP 语境，不把它当作 CP 的统一别名。
+
+| 并行方式 | 切分对象/维度 | rank 消费与通信 | 主要缓解与代价 |
+| --- | --- | --- | --- |
+| DP / DDP | 不同样本或有效 Token 的独立批次 | 参数复制，梯度按对应位置归约 | 扩展数据处理，复制训练状态 |
+| FSDP2 | 参数、梯度、优化器状态沿 DP/FSDP 组分片 | 计算前 gather，梯度 reduce-scatter | 降常驻状态，增加通信和临时峰值 |
+| TP | 权重行/列、头或隐藏特征维 | 层内局部计算后归约/拼接，反向有对应通信 | 分担单层计算/权重，频繁同步 |
+| SP | TP 组内部分激活沿 S 切分，常用于 Norm、dropout 等区域 | 分片逐 Token 操作，衔接 TP 时 gather/reduce-scatter | 减少某些激活复制；不直接解决完整 Attention 的跨序列依赖 |
+| CP | 同一个样本的上下文位置 S 跨 CP 组分片 | 本地 Q 消费远端 K/V，反向返还梯度贡献 | 分担长序列激活/Attention，增加跨位置通信 |
+| PP | 模型层/计算阶段 | 前向送激活，反向返梯度；多个微批次排流水线 | 分担深度与状态，存在气泡和阶段失衡 |
+| EP | 专家参数与专家计算 | 按路由发送 Token 激活，组合输出并返回梯度 | 分担专家规模，热门专家与 all-to-all 可限速 |
+
+SP 与 CP 都出现 sequence dimension，但作用区域和跨设备 Attention 协议不同；CP 也不自动切分权重。EP 组内专家分配不代表所有非专家层也按专家切分，专家参数的 DP 同步组可能与稠密层不同。表中的通信不是每种实现唯一的 collective 配方。
+
+## Context Parallelism 如何保留全上下文
+
+长上下文让激活增长，全注意力还要处理大量查询—键关系。即使权重已由 FSDP/TP 放得下，单 rank 的序列激活、Attention 工作区或计算仍可能超预算。CP 让同一样本的不同位置由不同 GPU 持有，并保持原 Attention 的跨位置可见性。
+
+一种 pass-KV 路径中，各 rank 先产生本地位置的 Q、K、V。Q 留在其位置所有者，本地查询对本地与远端 K/V 块依次计算；按因果或其他 mask、全局位置合并注意力结果。远端 K/V 可以 all-gather，也可以轮转。K/V 是**当前训练前向的激活**，不是在线 Serving 中长期复用的请求 KV Cache。
+
+Ring Attention 类方法将 K/V 块沿参与者轮转，让本地查询计算当前块的同时准备下一块。通过在线 Softmax 的统计量与输出累积保持跨块归一化，不是对每块单独 Softmax 后直接相加。它减少一次性持有全序列 K/V 的需要，并尝试隐藏通信；没有消除全注意力本身的计算量。
+
+反向时，本地 Q 的梯度来自它访问的相关 K/V 块；各查询 rank 对某块产生的 K/V 梯度贡献需要归并到该块的所有者。参数梯度再由对应的训练同步组处理。丢掉跨 rank 的梯度等于改变训练目标，不只是降低通信精度。
+
+全局位置、RoPE、mask、样本边界和 padding 必须与切分一致。因果 Attention 中靠前与靠后位置的有效计算量不同，连续均分位置可能造成负载不均；交错或重新分配块可改善，但需要准确恢复位置关系。通信缓冲、重计算与 TP/CP 组合也影响峰值。Ring 方法是否能隐藏传输取决于块计算时间和网络，不承诺任意长序列与卡数都线性扩展。
+
+依据：[Ring Attention](https://arxiv.org/abs/2310.01889)、[PyTorch Context Parallel](https://docs.pytorch.org/tutorials/unstable/context_parallel.html)。后者属于仍演进的实现入口，具体通信算法、支持范围和 API 可能变化。
+
+## 并行组合是一份布局和时间线合同
+
+组合通常让 TP 使用紧密互联，FSDP/DP 跨更大组，PP 按阶段分配，CP 给长上下文提供位置分担；这是常见设计方向，不是所有硬件的最优规则。TP 与 SP 的布局衔接可减少激活复制，TP 与 FSDP2 则分别管理层内计算与训练状态。
+
+每个参数、激活和梯度都要有明确归属：谁持有本片，消费前需要完整值还是局部贡献，哪个组归约，何时释放。一个 rank 可以属于多种组，EP 等维度也可能复用或重新组织已有组，不能只把所有缩写的规模相乘就推导有效配置。
+
+组合改变 critical path：PP 等待下游，FSDP 等待参数，CP 等待 K/V，EP 等待专家。Compiler 的融合和重计算还会改变通信就绪点，见[执行栈](28-ai-compiler-and-runtime.md)。判断扩展效率需看暴露通信、气泡与真实峰值，而非只看每卡参数减少多少。TP/SP/FSDP 组合依据：[PyTorch Tensor Parallel](https://docs.pytorch.org/tutorials/intermediate/TP_tutorial.html)。
 
 ## 重计算是以额外执行换保存状态
 
@@ -87,5 +149,24 @@ TP 的前向矩阵切分见[第 10 章](10-serving-and-distributed.md)，训练�
 所有分片必须对应同一逻辑更新边界。异步保存可以先固定一致快照再后台写，不能让训练继续修改同一缓冲导致某些片段新、某些片段旧。快照本身需要额外内存和复制，后台存储失败仍要可见。
 
 可恢复提交需要参数、优化器/调度、步数、随机状态、数据游标和配置版本，以及分片清单和完整性检查；未提交的一组文件不应被当作完整检查点。拓扑变化时还需可靠的重分片，不能按旧 rank 文件名随意加载。
+
+## Distributed Checkpoint 如何跨拓扑恢复
+
+训练时的 sharded state 按当前 Mesh/placement 分布；恢复时真正要找的是全局逻辑状态，不能把“rank 3 的文件”当作不变资产身份。Distributed Checkpoint（DCP）通过张量键、全局形状与分片元数据规划各 rank 保存/加载哪些片段，再对接持久存储。
+
+| 环节 | 状态与责任 | 失败或拓扑变化的处理 |
+| --- | --- | --- |
+| 固定更新点 | 训练系统确认参数、优化器、步数和数据进度一致 | 未完成的更新不能混入快照 |
+| 保存分片 | DCP/存储适配层写分片与描述元数据 | 分片失败时该版本不能作为完整恢复点 |
+| 持久提交 | 保存协调者与存储协议确认完整性、发布可恢复版本 | 保留先前有效版本；不能将异步任务启动当成持久成功 |
+| 新拓扑建立 | 训练系统创建新 rank 组、Mesh 和目标参数布局 | GPU 数量/组形态改变时仍要保持逻辑参数对应 |
+| Reshard 与加载 | 按新布局读取旧片段的相应范围，恢复参数及匹配优化器状态 | 不必让每个 rank 收集全模型，但额外 I/O、缓冲或通信仍有成本 |
+| Resume | 恢复调度、随机/数据进度，重建通信并继续 | 拒绝不兼容资产，或明确采用非严格续训策略 |
+
+DCP 能按受支持的状态和布局重新分片，不自动保证任意框架、存储 backend、版本或并行度之间都兼容。重分片不是改变张量含义；模型形状或参数命名改变属于资产迁移，需要额外协议。异步快照、完整提交标识与保留策略也需要训练和存储层共同定义，不能假设每个 backend 都有相同原子性。
+
+拓扑改变可能使随机数分配、样本顺序、全局批次和浮点归约顺序改变。参数/优化器可恢复，不等于后续逐位相同；数据游标若只记录旧 rank 的本地消费量，还需重新映射为一致全局进度。若调整全局批次或学习率，应记录为训练策略变化。
+
+依据：[PyTorch Distributed Checkpoint](https://docs.pytorch.org/docs/stable/distributed.checkpoint.html)。设备故障后的整组重启/弹性边界见[第 29 章](29-ai-platform-and-cluster-scheduling.md)，恢复停顿与存储争用的容量影响见[第 30 章](30-ai-systems-performance.md)。
 
 检查点机制与数据路径见[第 27 章](27-compute-infrastructure.md)，资产发布见[第 26 章](26-model-lifecycle.md)。故障排查应分别看数据正确性、数值、通信等待、峰值内存和恢复一致性，避免用单一吞吐数字覆盖它们。

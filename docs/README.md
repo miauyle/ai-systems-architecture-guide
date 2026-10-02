@@ -31,7 +31,7 @@
 | [15 · AI 数据生命周期与一致性](15-data-lifecycle.md) | 数据血缘、划分、更新与索引一致性 |
 | [07 · 数据与预训练架构](07-pretraining.md) | 输入标签、监督 Mask、反向信号与数据配比 |
 | [08 · 后训练、适配与对齐](08-post-training.md) | SFT、DPO、在线 RL 与 LoRA 的计算路径 |
-| [17 · 训练系统：优化、并行与恢复](17-training-engineering.md) | 累积归一化、梯度通信、参数取回与一致恢复 |
+| [17 · 训练系统：优化、并行与恢复](17-training-engineering.md) | 梯度更新、Mesh/DTensor、并行组合、CP 与分片恢复 |
 
 ## 推理与基础设施
 
@@ -39,9 +39,12 @@
 | --- | --- |
 | [09 · 推理、KV Cache 与资源管理](09-inference-and-memory.md) | 逐层 KV 写入读取、生成计数与缓存复用条件 |
 | [16 · 模型计算布局、算子与执行语义](16-transformer-implementation.md) | 拆头打包、融合、在线 Softmax 与增量语义 |
-| [10 · 推理服务与分布式架构](10-serving-and-distributed.md) | 请求生命周期、TP 矩阵切分与分布式交接 |
-| [18 · 推理引擎内部、容量与调度](18-inference-engineering.md) | 逻辑块映射、前缀共享、预算与验证状态提交 |
+| [10 · 推理服务与分布式架构](10-serving-and-distributed.md) | 请求生命周期、KV 所有权、P/D 池、集群路由与弹性 |
+| [18 · 推理引擎内部、容量与调度](18-inference-engineering.md) | 分页与前缀共享、remote KV、迭代预算与执行就绪 |
 | [27 · AI 计算基础设施与数据路径](27-compute-infrastructure.md) | 缓冲传输、数据复用、集体通信与资源关键路径 |
+| [28 · AI Compiler、Runtime 与 Kernel 执行栈](28-ai-compiler-and-runtime.md) | 图捕获、IR、融合、编译缓存与 Kernel 执行 |
+| [29 · AI Platform、GPU Cluster 与资源调度](29-ai-platform-and-cluster-scheduling.md) | GPU/NIC 拓扑、组调度、租户与副本生命周期 |
+| [30 · AI Systems 性能模型、SLO 与容量分析](30-ai-systems-performance.md) | 延迟、有效吞吐、关键路径、SLO 与容量成本 |
 
 ## 知识与行动
 

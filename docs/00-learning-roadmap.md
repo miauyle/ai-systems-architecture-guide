@@ -35,11 +35,25 @@ flowchart TB
 
 **能力脉络：**从机器学习的目标、表示和泛化进入 Token 与 Transformer，再理解预训练、后训练、多模态及生成家族。它解释能力从哪里来，以及为什么概率预测不等于事实保证。
 
-**执行脉络：**从模型计算进入张量布局、算子和数值精度，再理解 Prefill / Decode、KV、调度、并行与硬件。它解释同一个模型怎样形成不同容量、延迟与成本。
+**执行脉络：**Model Architecture → Tensor / Graph → Compiler / Runtime → Kernel → GPU / Network → Distributed Runtime → Training / Serving。模型规定逻辑计算，执行栈将图变成设备工作，分布式运行时管理跨 GPU 状态与通信，集群调度提供资源与拓扑，性能模型判断是否满足容量、延迟与成本目标。
 
 **应用脉络：**从外部知识、检索与工具进入任务状态、规划、记忆和恢复，再连接评估、安全与发布。它解释语言输出怎样成为可追溯的答案或可靠的业务动作。
 
 三条脉络相互约束：证据组织改变输入负载，模型行为改变工具次数，执行资源限制上下文，数据版本决定正确事实。
+
+## 执行中间层怎样连接上下游
+
+| 关系 | 需要追踪的对象 | 章节入口 |
+| --- | --- | --- |
+| Model → Tensor / Graph | 参数、张量布局、操作依赖与动态输入 | [模型结构](04-transformer.md)、[计算布局](16-transformer-implementation.md) |
+| Graph → Compiler / Runtime → Kernel | 捕获图、guard、IR、编译产物、缓冲与工作提交 | [编译与运行时](28-ai-compiler-and-runtime.md) |
+| Kernel → GPU / Network | HBM/片上访问、stream 依赖与通信完成 | [计算基础设施](27-compute-infrastructure.md) |
+| Distributed Runtime → Training | Device Mesh、张量 placement、CP 与分片恢复 | [训练系统](17-training-engineering.md) |
+| Distributed Runtime → Serving | 请求执行所有权、KV transfer、路由与池协调 | [服务架构](10-serving-and-distributed.md)、[推理引擎](18-inference-engineering.md) |
+| Workload → Cluster placement | Job/Deployment、GPU/NIC/存储约束、组级就绪 | [平台与集群调度](29-ai-platform-and-cluster-scheduling.md) |
+| Resource budget → Production | 关键路径、SLO、有效吞吐、容量与成本 | [性能模型](30-ai-systems-performance.md)、[生产评估](22-evaluation-and-production.md) |
+
+Compiler、Platform 与 Performance 仍归入“推理与基础设施”，同时服务训练和生产章节；不新增第七个分组。它们描述通用执行关系，深入 KV 存储层级与 RDMA/GDS 等路径由[AI Storage Notes](https://miauyle.github.io/ai-storage-notes/)承接。
 
 ## 基础与深入的分工
 
@@ -51,6 +65,8 @@ flowchart TB
 | [RAG 与工具](11-rag-and-agents.md) | [检索工程](19-retrieval-engineering.md) | 相关候选如何成为完整授权证据 |
 | [RAG 与工具](11-rag-and-agents.md) | [运行时](20-agent-runtime.md)、[规划与记忆](21-agent-planning-and-memory.md) | 动态决策如何保持持久状态与真实结果 |
 | [评估](12-evaluation.md) | [生产评估](22-evaluation-and-production.md) | 质量判断如何连接故障、负载与发布 |
+| [计算布局](16-transformer-implementation.md)、[硬件](27-compute-infrastructure.md) | [Compiler / Runtime](28-ai-compiler-and-runtime.md) | 张量图如何变成 Kernel 和设备执行 |
+| [训练](17-training-engineering.md)、[Serving](10-serving-and-distributed.md) | [集群平台](29-ai-platform-and-cluster-scheduling.md)、[性能](30-ai-systems-performance.md) | 分布式状态如何落到资源 placement 与 SLO 容量 |
 
 ## 跨章共同对象
 
