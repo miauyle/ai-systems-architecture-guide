@@ -24,7 +24,7 @@
 - `README.md`：定位、分组入口、范围与页面状态。
 - `docs/README.md`：完整分组目录。
 - `docs/00-learning-roadmap.md`：知识关系地图，历史文件名保留，不是学习验收计划。
-- `docs/01-*.md` 至 `docs/27-*.md`：专题正文。编号用于稳定标识，不强制表示阅读顺序。
+- `docs/01-*.md` 至 `docs/30-*.md`：专题正文。编号用于稳定标识，不强制表示阅读顺序。
 - `docs/glossary.md`：辅助术语查询，不能替代正文。
 - `docs/references.md`：原始资料入口。
 - `navigation.json`：与主题无关的分组导航；新增、删除、改名时同步目录与它。

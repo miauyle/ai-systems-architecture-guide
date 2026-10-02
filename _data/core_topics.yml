@@ -22,3 +22,12 @@
 - title: Evaluation
   url: /docs/12-evaluation/
   text: 质量、成本、可靠性与分层评估
+- title: Compiler / Runtime
+  url: /docs/28-ai-compiler-and-runtime/
+  text: 从张量图、IR 到 Kernel 与 GPU 执行
+- title: Cluster Scheduling
+  url: /docs/29-ai-platform-and-cluster-scheduling/
+  text: GPU、NIC、存储与分布式工作就绪
+- title: Performance
+  url: /docs/30-ai-systems-performance/
+  text: 关键路径、SLO、有效吞吐与容量

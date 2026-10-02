@@ -8,7 +8,7 @@
 
 `docs/` 是唯一正文源，`navigation.json` 是唯一分组目录。`_plugins/knowledge_site.rb` 构建时创建内存中的 Jekyll collection，将 GitHub Markdown 的相对文件链接转换为站点路由，保留原文件用于编辑入口。站点不输出维护规则与工程记录模板。
 
-首页使用主题的默认外壳和设计变量，`_layouts/knowledge-map.html` 展开六个分组，`_data/core_topics.yml` 提供八个机制专题入口。正文路径不变，站点路由采用 `/docs/原文件名去掉扩展名/`；完整目录为 `/docs/`。新增章只需更新正文、原目录与导航 JSON。
+首页使用主题的默认外壳和设计变量，`_layouts/knowledge-map.html` 展开六个分组，`_data/core_topics.yml` 提供机制专题入口。正文路径不变，站点路由采用 `/docs/原文件名去掉扩展名/`；完整目录为 `/docs/`。新增章同步正文、原目录与导航 JSON，核心入口按需更新。
 
 ## 构建与本地预览
 

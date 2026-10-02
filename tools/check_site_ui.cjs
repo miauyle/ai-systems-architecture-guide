@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const nav = require('../navigation.json');
+const coreTopicCount = (fs.readFileSync(path.resolve(__dirname, '../_data/core_topics.yml'), 'utf8').match(/^- title:/gm) || []).length;
 const siteRoot = path.resolve(__dirname, '../_site');
 const evidence = path.resolve(__dirname, '../site-qa');
 fs.mkdirSync(evidence, { recursive: true });
@@ -45,7 +46,7 @@ const report = { checks: [], errors: [] };
     }
     await open('/');
     assert.equal(await page.locator('.knowledge-group').count(), 6);
-    assert.equal(await page.locator('.knowledge-topic').count(), 8);
+    assert.equal(await page.locator('.knowledge-topic').count(), coreTopicCount);
     assert.equal(await page.locator('.knowledge-overview a').count(), 6);
     assert.deepEqual(await page.locator('.knowledge-group h3').allTextContents(), nav.groups.map(g => g.title));
     const brandLogo = page.locator('.navbar .brand__logo');
@@ -63,7 +64,7 @@ const report = { checks: [], errors: [] };
     await page.locator('[data-skin-set="aqua"]').click();
     report.checks.push('brand logo uses cache-busted asset and follows skin accent');
     await page.screenshot({ animations: 'disabled', path: path.join(evidence, 'home-desktop-light.png'), fullPage: true });
-    report.checks.push('home: six groups, eight topics, production baseurl');
+    report.checks.push(`home: six groups, ${coreTopicCount} topics, production baseurl`);
     await page.locator('#modeToggle').click();
     assert.equal(await page.locator('html').getAttribute('data-mode'), 'dark');
     await page.screenshot({ animations: 'disabled', path: path.join(evidence, 'home-desktop-dark.png'), fullPage: true });
@@ -101,7 +102,7 @@ const report = { checks: [], errors: [] };
         assert.ok(link && link.startsWith('/ai-systems-notes/docs/'), 'Pager URL');
       }
     }
-    report.checks.push('all 30 knowledge pages: formula/diagram rendering, active sidebar, TOC, pager');
+    report.checks.push(`all ${pages.length} knowledge pages: formula/diagram rendering, active sidebar, TOC, pager`);
     await open('/docs/04-transformer/');
     await page.screenshot({ animations: 'disabled', path: path.join(evidence, 'transformer-desktop-light.png'), fullPage: true });
     const diagramBefore = await page.locator('.mermaid svg').first().getAttribute('id');

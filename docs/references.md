@@ -4,6 +4,8 @@
 
 本表提供稳定知识的原始资料入口，不是实时模型榜单。关键原理在对应章节解释，资料用于追溯依据。2026-10-01 核对了核心计算、训练、缓存、并行、检索与运行时的部分论文和官方机制文档，并补充对应入口；未对所有历史外链逐一确认。官方接口和支持条件以所用版本为准。
 
+2026-10-03 补充并查阅 Compiler、现代并行、DCP、集群调度、KV-aware routing 与性能模型的官方资料/原始论文入口。`stable`、`main`、`dev` 文档可能移动或改变支持范围，本文不固定未验证的版本默认行为；部分新接口仍在演进。章内区分稳定机制、具体实现和设计合同，未声称复现论文性能。
+
 ## 核心结构与表示
 
 | 资料 | 年份 | 支持本仓库中的主题 | 建议先看 |
@@ -96,6 +98,65 @@
 先看问题、架构图、输入输出和实验设置，再读公式。检查结论适用的模型规模、数据、硬件与负载，不把论文中的某个加速倍数当作所有环境的保证。
 
 资料按专题使用，阅读关系见[知识地图](00-learning-roadmap.md)。不要求按论文列表逐篇完成。
+
+## Compiler / Runtime 与 Kernel
+
+| 官方资料或原始论文 | 支持的关系 | 对应正文 |
+| --- | --- | --- |
+| [PyTorch Compiler](https://docs.pytorch.org/docs/stable/torch.compiler.html) | Eager、捕获与编译的责任边界 | [28](28-ai-compiler-and-runtime.md) |
+| [PyTorch Compiler FAQ](https://docs.pytorch.org/docs/stable/user_guide/torch_compiler/torch.compiler_faq.html) | TorchDynamo、AOTAutograd 与 TorchInductor 的组合 | [28](28-ai-compiler-and-runtime.md) |
+| [PyTorch 2 论文](https://pytorch.org/assets/pytorch2-2.pdf) | Python 图捕获、IR 与代码生成设计 | [28](28-ai-compiler-and-runtime.md) |
+| [Dynamic Shapes](https://docs.pytorch.org/docs/main/user_guide/torch_compiler/torch.compiler_dynamic_shapes.html) | 符号维度、guard 与重新编译边界 | [28](28-ai-compiler-and-runtime.md) |
+| [Compile Time Caching](https://docs.pytorch.org/tutorials/recipes/torch_compile_caching_configuration_tutorial.html) | 图/编译产物缓存与冷启动 | [28](28-ai-compiler-and-runtime.md) |
+| [Triton](https://triton-lang.org/main/index.html) | 分块 Kernel 语言与编译器 | [28](28-ai-compiler-and-runtime.md) |
+| [CUDA Graphs](https://docs.nvidia.com/cuda/cuda-programming-guide/04-special-topics/cuda-graphs.html) | 定义、实例化、工作提交与重放 | [28](28-ai-compiler-and-runtime.md) |
+| [CUDA Programming Guide](https://docs.nvidia.com/cuda/cuda-programming-guide/) | Kernel、内存与异步执行平台 | [27](27-compute-infrastructure.md)、[28](28-ai-compiler-and-runtime.md) |
+
+FlashAttention 原论文入口见“现代架构与效率”，本库将其定位为 IO-aware Attention 算法与 Kernel 实现家族，不是通用 Compiler 或模型结构。
+
+## Modern Parallelism 与恢复
+
+| 官方资料或原始论文 | 支持的关系 | 对应正文 |
+| --- | --- | --- |
+| [DeviceMesh](https://docs.pytorch.org/docs/stable/distributed.html#devicemesh) | 逻辑设备轴、rank 组与物理映射 | [17](17-training-engineering.md)、[29](29-ai-platform-and-cluster-scheduling.md) |
+| [DTensor](https://docs.pytorch.org/docs/stable/distributed.tensor.html) | Replicate / Shard / Partial 与布局转换 | [17](17-training-engineering.md) |
+| [FSDP2 / fully_shard](https://docs.pytorch.org/docs/stable/distributed.fsdp.fully_shard.html) | 逐参数分片、取回与 TP 组合 | [17](17-training-engineering.md) |
+| [PyTorch Tensor Parallel](https://docs.pytorch.org/tutorials/intermediate/TP_tutorial.html) | TP、SP 与 FSDP 组合的具体语境 | [17](17-training-engineering.md) |
+| [PyTorch Context Parallel](https://docs.pytorch.org/tutorials/unstable/context_parallel.html) | 序列分片、pass-KV 与位置/通信约束；实现仍演进 | [17](17-training-engineering.md) |
+| [Ring Attention](https://arxiv.org/abs/2310.01889)（2023） | 分块 K/V 轮转、全局 Attention 与通信重叠 | [17](17-training-engineering.md) |
+| [Distributed Checkpoint](https://docs.pytorch.org/docs/stable/distributed.checkpoint.html) | 分片元数据、持久保存、拓扑变化与 reshard | [17](17-training-engineering.md) |
+| [NCCL Collectives](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/collectives.html) | 参数/梯度/激活交换的基本语义 | [17](17-training-engineering.md)、[27](27-compute-infrastructure.md) |
+
+SP 命名在不同论文中不完全一致，应核对实际算法。DCP 的支持布局、存储 backend 与版本兼容范围以所用实现为准，不能将张量重分片推断成任意训练策略的无损迁移。
+
+## Cluster Scheduling 与 Distributed Serving
+
+| 官方资料或原始论文 | 支持的关系 | 对应正文 |
+| --- | --- | --- |
+| [Kubernetes GPU Scheduling](https://kubernetes.io/docs/tasks/manage-gpus/scheduling-gpus/) | GPU 资源请求、能力与节点选择 | [29](29-ai-platform-and-cluster-scheduling.md) |
+| [Device Plugins](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/device-plugins/) | 设备健康、资源报告与容器访问 | [29](29-ai-platform-and-cluster-scheduling.md) |
+| [Dynamic Resource Allocation](https://kubernetes.io/docs/concepts/resource-management/dynamic-resource-allocation/) | DeviceClass / Claim / Slice 与设备准备 | [29](29-ai-platform-and-cluster-scheduling.md) |
+| [Topology Manager](https://kubernetes.io/docs/tasks/administer-cluster/topology-manager/) | CPU、设备与 NUMA locality；不等于全集群网络优化 | [29](29-ai-platform-and-cluster-scheduling.md) |
+| [Gang Scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/gang-scheduling/) | 组级可调度性与启动条件；启用范围依版本 | [29](29-ai-platform-and-cluster-scheduling.md) |
+| [Resource Quotas](https://kubernetes.io/docs/concepts/policy/resource-quotas/) / [Priority and Preemption](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/) | 租户限额、优先级和资源回收 | [29](29-ai-platform-and-cluster-scheduling.md) |
+| [Gateway API Inference Extension](https://gateway-api-inference-extension.sigs.k8s.io/) / [InferencePool](https://gateway-api-inference-extension.sigs.k8s.io/api-types/inferencepool/) | 服务池、Gateway 与 Endpoint Picker 的职责 | [10](10-serving-and-distributed.md)、[29](29-ai-platform-and-cluster-scheduling.md) |
+| [NVIDIA Dynamo KV-aware Routing](https://docs.nvidia.com/dynamo/dev/knowledge-base/concepts/system-architecture/kv-aware-routing) | 缓存事件、预计负载与 P/D 目标选择 | [10](10-serving-and-distributed.md) |
+| [vLLM Disaggregated Prefill](https://docs.vllm.ai/en/latest/features/disagg_prefill/) | 独立引擎之间的 KV 交接实现入口 | [10](10-serving-and-distributed.md)、[18](18-inference-engineering.md) |
+| [DistServe](https://arxiv.org/abs/2401.09670)（2024） | P/D 解耦、传输、放置与 SLO 条件 | [10](10-serving-and-distributed.md)、[30](30-ai-systems-performance.md) |
+| [PagedAttention](https://arxiv.org/abs/2309.06180)（2023） | 分页、块引用与服务容量的关系 | [18](18-inference-engineering.md) |
+
+选择 worker、传输 KV 和推进请求所有权是不同责任；正文中的可恢复交接表是设计合同，不冒称上述实现都提供相同状态机或流式 exactly-once 交付。
+
+## Performance Model、排队与 SLO
+
+| 官方资料或原始论文 | 支持的关系 | 对应正文 |
+| --- | --- | --- |
+| [vLLM Metrics](https://docs.vllm.ai/en/stable/design/metrics/) | TTFT、TPOT/ITL、请求与迭代的计时口径 | [30](30-ai-systems-performance.md) |
+| [Roofline](https://escholarship.org/uc/item/78h8v7mr)（2009） | 算术强度、带宽与算力上限 | [30](30-ai-systems-performance.md) |
+| [Amdahl 原始论文](https://doi.org/10.1145/1465482.1465560)（1967） | 固定工作量下局部加速与整体上限 | [30](30-ai-systems-performance.md) |
+| [Little：A Proof for the Queuing Formula](https://doi.org/10.1287/opre.9.3.383)（1961） | 稳定系统平均数量、到达率与停留时间 | [30](30-ai-systems-performance.md) |
+
+排队关系与 Roofline 是带前提的分析工具，不独立预测生产 P99、通用 GPU speedup 或真实可交付容量。正文以一致负载和质量/SLO 约束解释测量。
 
 ## 通用学习与生成家族
 

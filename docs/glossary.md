@@ -63,3 +63,54 @@
 | Checkpoint | 检查点，推理导出与训练恢复所需内容不同 | [17](17-training-engineering.md) |
 | Idempotency | 幂等，同一业务意图重试不重复产生效果 | [20](20-agent-runtime.md) |
 | MCP | 工具与资源连接协议；不是完整任务运行时 | [21](21-agent-planning-and-memory.md) |
+
+## 编译、执行与现代并行
+
+| 术语 | 含义与边界 | 正文 |
+| --- | --- | --- |
+| Eager Mode | 随程序运行分派张量算子；GPU 提交通常异步 | [28](28-ai-compiler-and-runtime.md) |
+| Computational graph | 操作与数据依赖的表示，不是一次激活快照 | [28](28-ai-compiler-and-runtime.md) |
+| Graph capture / graph break | 提取可编译片段 / 捕获边界中断；break 不等于 guard 失败后的重新编译 | [28](28-ai-compiler-and-runtime.md) |
+| Guard / dynamic shape | 编译产物适用条件 / 符号形状约束；不保证任意输入无重编译 | [28](28-ai-compiler-and-runtime.md) |
+| TorchDynamo | 从 Python 执行捕获张量图与适用条件 | [28](28-ai-compiler-and-runtime.md) |
+| AOTAutograd | 提前构造可编译前向/反向及相关变换；不是完整离线部署的同义词 | [28](28-ai-compiler-and-runtime.md) |
+| TorchInductor | 将图降低为调度、缓冲安排、代码与库调用的 backend | [28](28-ai-compiler-and-runtime.md) |
+| Compiler IR | 中间表示；不同层级分别保留算子关系或循环/索引/布局 | [28](28-ai-compiler-and-runtime.md) |
+| Operator / kernel fusion | 图上的融合区域 / 设备程序中的融合；一个区域未必一个 Kernel | [28](28-ai-compiler-and-runtime.md) |
+| Memory planning | 根据存活与依赖安排缓冲；不等于整个进程的显存预算 | [28](28-ai-compiler-and-runtime.md) |
+| Compile cache / autotuning | 复用兼容编译状态 / 测候选实现作选择；均依赖输入与环境 | [28](28-ai-compiler-and-runtime.md) |
+| Triton | GPU Kernel 语言与编译器，不替代完整 CUDA 平台 | [28](28-ai-compiler-and-runtime.md) |
+| CUDA Graph | 可重放的设备工作与依赖；不同于模型计算图，不自动融合 Kernel | [28](28-ai-compiler-and-runtime.md) |
+| FlashAttention | IO-aware 精确 Attention 算法与 Kernel 实现家族 | [16](16-transformer-implementation.md)、[28](28-ai-compiler-and-runtime.md) |
+| Device Mesh | rank 的逻辑多维组织；逻辑轴不是张量维度或物理链路保证 | [17](17-training-engineering.md) |
+| DTensor / placement | 全局逻辑张量与本地片段关系；Replicate、Shard、Partial 定义布局 | [17](17-training-engineering.md) |
+| FSDP2 | 逐参数 DTensor 分片的训练状态管理；计算前仍需取回参数 | [17](17-training-engineering.md) |
+| TP / PP / EP | 矩阵/特征、层/阶段、专家的不同切分对象 | [17](17-training-engineering.md)、[10](10-serving-and-distributed.md) |
+| Sequence Parallel (SP) | 本库采用 TP 语境，部分激活沿序列切分；命名依论文变化 | [17](17-training-engineering.md) |
+| Context Parallel (CP) | 同一样本上下文位置跨 GPU 切分，Attention 保持跨位置依赖 | [17](17-training-engineering.md) |
+| Ring Attention | 分块 K/V 轮转与在线归一化；不消除全注意力计算 | [17](17-training-engineering.md) |
+| Distributed Checkpoint / reshard | 用逻辑状态元数据保存并按新布局加载；不保证任意版本/模型迁移 | [17](17-training-engineering.md) |
+
+## 集群 Serving、调度与性能
+
+| 术语 | 含义与边界 | 正文 |
+| --- | --- | --- |
+| P/D disaggregation | Prefill 与 Decode 独立资源池，需交接兼容 KV 与请求状态 | [10](10-serving-and-distributed.md) |
+| Inference Gateway / Endpoint Picker | 请求入口与模型端点选择；不分配 GPU、不自动转移 KV | [10](10-serving-and-distributed.md)、[29](29-ai-platform-and-cluster-scheduling.md) |
+| KV ownership | KV 引用归属与活动请求执行所有权需要分别跟踪 | [10](10-serving-and-distributed.md) |
+| KV-aware / locality-aware / load-aware routing | 复用、数据/设备距离、预计负载的不同目标，可能冲突 | [10](10-serving-and-distributed.md) |
+| Remote KV / KV offload | 从其他位置取兼容状态 / 状态离开紧缺层级；命中不等于本地可执行 | [18](18-inference-engineering.md) |
+| Fleet-level serving | 多模型、副本与阶段池的协同服务及生命周期 | [10](10-serving-and-distributed.md) |
+| Topology-aware placement / GPU + NIC affinity | 将逻辑通信组映射到实际互联和主机/网卡路径 | [29](29-ai-platform-and-cluster-scheduling.md) |
+| Gang / coordinated scheduling | 组级足够资源 / 启动、就绪与恢复协同；调度成功不保证 Runtime 就绪 | [29](29-ai-platform-and-cluster-scheduling.md) |
+| Device plugin / DRA | 设备报告与容器访问 / 更丰富的声明、匹配与准备机制 | [29](29-ai-platform-and-cluster-scheduling.md) |
+| Quota / priority / preemption | 可用份额、竞争顺序、资源回收；不自动保证公平或无损恢复 | [29](29-ai-platform-and-cluster-scheduling.md) |
+| Autoscaling / cold start / drain | 副本弹性 / 加载与预热 / 停止准入后完成或迁移活动工作 | [29](29-ai-platform-and-cluster-scheduling.md) |
+| TPOT / ITL | 请求平均后续 Token 时间 / 相邻 Token 间隔；分布与计时边界不同 | [30](30-ai-systems-performance.md) |
+| Tail latency / P99 | 慢样本与延迟分位；不能用阶段 P99 相加构造请求 P99 | [30](30-ai-systems-performance.md) |
+| Useful throughput / goodput | 按质量与 SLO 定义的有效交付量；需另报到达、拒绝与失败 | [30](30-ai-systems-performance.md) |
+| Roofline / arithmetic intensity | 运算上限与指定层级字节搬运的关系；不是可达性能保证 | [30](30-ai-systems-performance.md) |
+| Amdahl’s Law | 固定工作量下局部优化受未优化部分限制 | [30](30-ai-systems-performance.md) |
+| Little’s Law | 稳定边界中的平均在系统数量 = 到达率 × 平均停留；不是 P99 预测 | [30](30-ai-systems-performance.md) |
+| SLO-driven capacity | 在质量、延迟、错误/准入约束下的服务容量 | [30](30-ai-systems-performance.md) |
+| Cost per request / token | 同一窗口总资源成本除以明确口径的交付量 | [30](30-ai-systems-performance.md) |

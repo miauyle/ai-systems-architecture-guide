@@ -34,6 +34,22 @@ p(x_1,\ldots,x_T)=\prod_{t=1}^{T}p(x_t\mid x_1,\ldots,x_{t-1})
 
 Tokenizer、模型配置和权重必须匹配。只有一份权重文件，不代表拥有完整可复现的模型。
 
+## 模型和服务之间的执行中间层
+
+四层架构表达责任，真正运行还要穿过执行栈：Model Architecture → Tensor / Graph → Compiler / Runtime → Kernel → GPU / Network → Distributed Runtime → Training / Serving。这不是另加一类应用，而是模型计算怎样成为资源上的真实工作。
+
+| 中间层 | 产生什么、谁消费 | 关键状态与约束 |
+| --- | --- | --- |
+| Tensor / Graph | 框架表达张量操作与依赖，Compiler 分析 | shape、stride、dtype、别名、动态分支 |
+| Compiler / Runtime | 图转换为代码/库调用，Runtime 准备并提交 | guard、IR、编译缓存、临时缓冲、stream 与图实例 |
+| Kernel / Hardware | Kernel 访问权重/激活/KV，设备与网络完成工作 | HBM/片上资源、启动、通信依赖与拓扑 |
+| Distributed Runtime | rank 按布局交换参数、梯度、激活或 KV | Mesh、placement、通信组、执行所有权与恢复点 |
+| Platform / Performance | 平台提供设备与副本，指标验证交付 | 配额、组级就绪、locality、SLO 与有效容量 |
+
+Eager 可以直接分派已有 Kernel，编译也可以调用现有库，不能把上述关系误读为所有工作必经代码生成。编译产物不是模型权重，CUDA Graph 不是模型计算图，训练 K/V 激活也不是 Serving 的持久请求缓存。
+
+入口：[执行栈](28-ai-compiler-and-runtime.md)、[现代并行](17-training-engineering.md)、[集群 Serving](10-serving-and-distributed.md)、[平台调度](29-ai-platform-and-cluster-scheduling.md)、[性能模型](30-ai-systems-performance.md)。Production 的质量验收与故障评估见[第 22 章](22-evaluation-and-production.md)。
+
 ## 一次请求的生命周期
 
 ```mermaid

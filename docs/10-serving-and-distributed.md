@@ -80,6 +80,79 @@ Attention 常按头切 Q/K/V，各卡算本地头，再通过输出投影的部�
 
 传输字节随前缀状态增长，还可能有源/目标重复持有 KV 的峰值占用。失败时要区分“源端已完成”“传输已完成”“目标已接管”，否则容易泄漏、重复输出或误释放。收益取决于互联、负载和服务目标。研究入口：[DistServe](https://arxiv.org/abs/2401.09670)。
 
+## 从单引擎到集群级请求路径
+
+下面是 Prefill / Decode disaggregation（P/D 解耦）的一种逻辑路径。Gateway 和 Router 可以在同一进程，也可以独立部署；流式结果可经网关或代理返回。图表示责任与状态依赖，不规定所有实现都必须有独立的七个进程。
+
+```mermaid
+flowchart TB
+    C[Client] --> G[Inference Gateway]
+    G --> R[KV-aware Router]
+    R --> P[Prefill Pool]
+    R -. Decode 准入与目标选择 .-> D[Decode Pool]
+    P --> K[KV Transfer]
+    K --> D
+    D --> S[Stream Response]
+    S --> C
+    P -. 缓存事件与负载 .-> R
+    D -. 容量与健康 .-> R
+```
+
+Inference Gateway 管理模型身份、认证、配额、超时与输出连接。Router 从兼容副本中选择计算归属和交接路径；Prefill Pool 产生缺失前缀状态，Decode Pool 保留生成历史并持续推进。一个 pool 的成员可以是单 GPU worker，也可以是由多个 rank 组成的 TP/PP 副本。
+
+控制面需要模型版本、worker 生命周期、容量、队列与缓存位置索引，数据面传请求、张量状态和输出。缓存事件可能异步到达 Router，因此位置索引是选择依据，不是保证远端块仍在的证明；目标引擎必须再次校验并保留实际引用。
+
+实现入口：[Gateway API Inference Extension](https://gateway-api-inference-extension.sigs.k8s.io/)、[NVIDIA Dynamo KV-aware Routing](https://docs.nvidia.com/dynamo/dev/knowledge-base/concepts/system-architecture/kv-aware-routing)。这些是机制实例，路由协议、对象与默认策略可能随版本变化。
+
+## KV ownership：可读副本与推进请求的权利
+
+Prefill 结束时，源端拥有已计算位置的 KV；目标可能已预留空间，但尚不能消费半到达或布局不兼容的状态。协议应分别跟踪“可读取 KV 的引用”和“推进请求、采样并对外输出的执行所有权”。KV 可以被多个请求以不可变前缀共享，而一个活动请求仍需明确哪个执行者推进它。
+
+一种可恢复交接可按以下状态组织；这是一份设计合同，不宣称所有引擎都实现相同状态机：
+
+| 交接状态 | 谁做什么 | 正确性边界 |
+| --- | --- | --- |
+| Target reserved | 目标确认兼容模型/布局，预留容量；源继续持有状态 | 单选目标不等于容量已经保证 |
+| Transferring | 源发送带有效位置、分片与版本标识的 KV | 接收局部块不等于整个请求就绪 |
+| Target ready | 目标验证完整性与设备可读依赖，建立本地映射 | 网络传输完成与 GPU 可安全消费需按执行合同衔接 |
+| Ownership committed | 协调者确认目标推进，请求代次/租约隔离旧执行者 | 防止重试造成源目标同时生成或重复输出 |
+| Source released | 源确认交接，解除本请求引用 | 共享前缀其他引用与在途访问仍须保留 |
+
+超时不等于目标没有收到。交接重试应可识别同一 transfer 与请求代次，查询接管结果或明确撤销，而不是两端都自行继续。源故障时可能从其他兼容副本取状态或重算；目标故障时也需要重新选择/重建。执行所有权的防重不自动给流式 HTTP 提供 exactly-once 交付，应用还需定义已发送输出、断流和续传策略。
+
+普通服务可以在流开始前重试；部分输出已发送后，悄悄换 worker 重新生成可能使内容重复或改变。恢复需要 Token 历史、已计算边界、采样/约束状态和输出序号；有的实现选择终止并返回明确错误，而不是透明续流。
+
+## 路由目标为何互相冲突
+
+**最低队列长度、最高 KV cache 命中率、最优 GPU locality 不一定指向同一个 worker。**空闲副本可能没有前缀；有长前缀的副本可能排队严重；最近的 Decode 目标可能剩余 KV 容量不足。路由不能只用一项分数覆盖其他约束。
+
+| 信号 | 倾向选择什么 | 会忽略的代价 |
+| --- | --- | --- |
+| KV-aware | 可复用兼容前缀的 worker，少做 Prefill | 热点排队、前缀可能已被淘汰 |
+| Locality-aware | 状态近、P/D 传输短或副本内部拓扑合适 | 最近不一定最空闲，可能无可用容量 |
+| Load-aware | 预计队列工作量小、Token/显存压力低的目标 | 需要重算、跨节点迁移或加载适配器 |
+| Model replica routing | 权重版本、适配器和能力满足要求的副本 | 副本健康不等于全体 rank 和真实服务预算健康 |
+
+应先筛选兼容性、健康、租户隔离和容量等硬约束，再比较剩余 Prefill、等待、KV 传输与 Decode 的预计成本。队列长度只数请求，会低估长输入或长输出；完整前缀命中也未必直接产生首 logits，见[第 18 章](18-inference-engineering.md)。缓存索引过期时要允许校验失败、回退重算或重新选择，避免把预期命中当成已经省下的时间。
+
+P/D 解耦可分别安排资源，但也新增传输、双端预留与故障边界。Prefill 扩容过快可能堆积尚未获得 Decode 空间的状态；Decode 不足会让已完成 Prefill 的请求继续等待。是否拆分应由输入/输出分布、互联与 TTFT/ITL 目标共同决定，不能将论文中特定 goodput 提升当作通用收益。
+
+## Fleet-level serving 与弹性生命周期
+
+Fleet 是多个模型、副本和阶段池构成的服务集合。平台控制 model placement 和副本数，Router 选择请求落点，引擎进行本轮 Token 调度；三个决策时间尺度不同。跨副本不一定共享权重驻留、KV 命中或适配器集合。
+
+扩容包含获取权重、格式准备、GPU 加载、通信组初始化、编译/图准备和预热。Pod Running 不等于 model ready；新副本没有热前缀，即使权重文件命中节点缓存，早期 TTFT 仍可能偏高。多个副本一起加载还会竞争存储与网络。编译状态见[第 28 章](28-ai-compiler-and-runtime.md)，设备与加载路径见[第 27 章](27-compute-infrastructure.md)。
+
+Autoscaling 应关联到达率、等待工作、TTFT/ITL、活跃 KV 与阶段压力；仅按 GPU utilization 扩卡会错过 CPU/网络瓶颈。P/D 池应分别观察又协调比例，预留启动时间与突发余量。缩容先停止接新请求，再 drain 活动请求；转移活动 KV、重新计算或终止各有代价，不能直接删除副本当作无损缩容。
+
+集群 placement 与 GPU/NIC affinity 见[第 29 章](29-ai-platform-and-cluster-scheduling.md)，SLO 驱动容量和成本见[第 30 章](30-ai-systems-performance.md)。
+
+## 本库与 AI Storage 的分工
+
+本库解释 request lifecycle、scheduler、KV ownership、routing、Prefill / Decode、SLO 与 cluster-level serving。Remote KV 是从其他位置取得兼容状态，KV offload 是将本地活动/缓存状态移出紧缺层级；它们在这里作为调度和可用性边界出现，具体读写与存储组织见[第 18 章](18-inference-engineering.md)的接口关系。
+
+[AI Storage Notes](https://miauyle.github.io/ai-storage-notes/)深入 KV 的 GPU HBM / CPU DRAM / SSD / remote cache 层级、RDMA、GDS、object storage、GPU Data Path 与 S3 over RDMA。本库不复制这些底层实现；Serving 必须知道传输何时完成、状态是否有效、失败是否可重建，而无需在这里重复存储协议教程。
+
 ## 指标要与边界和负载一起定义
 
 TTFT 应明确从客户端发送、服务接收还是引擎接收计时，包含的排队、预处理、Prefill 与传输不同。Inter-token latency / TPOT 也要说明是引擎 Token 还是客户端可见事件，流式合并会改变观测。
@@ -87,5 +160,7 @@ TTFT 应明确从客户端发送、服务接收还是引擎接收计时，包含
 吞吐需区分输入和输出 Token，并记录输入/输出长度分布、并发、缓存命中与质量约束。峰值 tokens/s 不等于服务容量；更有用的是满足首响应、后续间隔和错误率目标时的有效请求量。量化、推测解码与缓存策略见[推理引擎](18-inference-engineering.md)。
 
 模型文件缓存、KV 前缀缓存和业务答案缓存复用的对象、失效条件及权限不同。容量回归与生产观测见[第 22 章](22-evaluation-and-production.md)。
+
+指标的统一定义、关键路径归因与 SLO 容量方法见[AI Systems 性能模型](30-ai-systems-performance.md)。
 
 调度依据：[Orca](https://www.usenix.org/conference/osdi22/presentation/yu)、[PagedAttention](https://arxiv.org/abs/2309.06180)；通信语义见[NCCL 集体操作](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/collectives.html)。
