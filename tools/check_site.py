@@ -71,7 +71,9 @@ def main():
             if url.fragment and target.resolve() in pages:
                 assert unquote(url.fragment) in pages[target.resolve()].ids, f"Broken anchor: {file}: {link}"
     index = json.loads((SITE / "search.json").read_text())
-    assert len(index) == len(expected) + 1
+    assert len(index) == len(expected)
+    expected_urls = {BASE + "/docs/" + Path(item["path"]).stem + "/" for item in expected}
+    assert {item["url"] for item in index} == expected_urls, "Search coverage differs from maintained knowledge sources"
     for item in index:
         assert item["content"] and item["category"] and item["url"].startswith(BASE + "/docs/")
     assert any("reduce-scatter" in item["content"] for item in index), "Search truncated deep content"
