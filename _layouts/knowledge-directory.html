@@ -1,0 +1,23 @@
+---
+layout: doc
+---
+<div class="knowledge-directory">
+  <p>按六个知识分组浏览。文件编号只用于稳定标识，不表示阅读顺序；目录入口仅显示专题名称。</p>
+  {% for group in site.data.knowledge_map.groups %}
+  <h2>{{ group.title }}</h2>
+  <ul>
+    {% for item in group.pages %}
+    <li><a class="knowledge-directory__page" href="{{ item.url | relative_url }}">{{ item.title | split: ' · ' | last }}</a> — {{ item.summary }}</li>
+    {% endfor %}
+  </ul>
+  {% endfor %}
+
+  <h2>查询与依据</h2>
+  <ul>
+    {% for item in site.data.knowledge_map.reference_pages %}
+    <li><a class="knowledge-directory__page" href="{{ item.url | relative_url }}">{{ item.title }}</a> — {{ item.summary }}</li>
+    {% endfor %}
+  </ul>
+
+  <p>维护信息：<a href="{{ '/CONTRIBUTING.html' | relative_url }}">内容约定</a>、<a href="https://github.com/miauyle/ai-systems-notes/blob/master/maintenance/publishing.md">GitHub Pages 准备</a>。它们不属于知识章节。</p>
+</div>
