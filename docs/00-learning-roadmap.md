@@ -79,6 +79,8 @@ Compiler、Platform 与 Performance 仍归入“推理与基础设施”，同�
 | --- | --- |
 | [15 · 数据](15-data-lifecycle.md) | manifest/version、mixture、sampling/packing、loader 消费恢复与污染 |
 | [08 · 后训练](08-post-training.md)、[17 · 训练工程](17-training-engineering.md) | 08 负责 RL 轨迹/策略陈旧的语义；17 负责 GPU 分池、权重发布、并行与 checkpoint |
+| [13 · 推理时 Reasoning](13-multimodal-and-reasoning.md) | candidate/search/verification/selection、分支状态与推理预算；不重复训练时策略更新 |
+| [14 · 系统整合](14-end-to-end-case.md) | 构建与请求两条路径、资产生命周期、三层调度连接及故障传播的总装图 |
 | [10 · Serving](10-serving-and-distributed.md) | 请求生命周期、Gateway/Router、P/D transfer、KV ownership、fleet |
 | [18 · 引擎](18-inference-engineering.md) | KV block/page、prefix、迭代批处理/局部容量、remote/offload 接口、量化/推测 |
 | [27 · 硬件路径](27-compute-infrastructure.md) | GPU/HBM/CPU、互联、NCCL primitive 与物理传输边界 |

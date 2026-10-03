@@ -6,6 +6,8 @@
 
 2026-10-03 补充并查阅 Compiler、现代并行、DCP、集群调度、KV-aware routing 与性能模型的官方资料/原始论文入口。`stable`、`main`、`dev` 文档可能移动或改变支持范围，本文不固定未验证的版本默认行为；部分新接口仍在演进。章内区分稳定机制、具体实现和设计合同，未声称复现论文性能。
 
+同日端到端整合时查阅下表 Test-Time Compute Scaling、Tree of Thoughts、Self-Refine 与 Let's Verify Step by Step 原始论文入口，用于第 13 章区分求解、验证、搜索与预算；不将某种候选架构或实验收益当作 reasoning model 的统一实现。
+
 ## 核心结构与表示
 
 | 资料 | 年份 | 支持本仓库中的主题 | 建议先看 |
@@ -68,7 +70,6 @@
 | [BM25 综述](https://doi.org/10.1561/1500000019) | 2009 | 词频、逆文档频率与长度归一化 |
 | [Reciprocal Rank Fusion 作者版](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf) | 2009 | 基于名次的检索融合；[DOI](https://doi.org/10.1145/1571941.1572114) |
 | [HNSW](https://arxiv.org/abs/1603.09320) | 2016 | 近似最近邻与图索引 |
-| [Tree of Thoughts](https://arxiv.org/abs/2305.10601) | 2023 | 多候选搜索与选择机制的实例 |
 | [Reflexion](https://arxiv.org/abs/2303.11366) | 2023 | 反馈与记忆机制的研究实例 |
 | [MemGPT](https://arxiv.org/abs/2310.08560) | 2023 | 上下文与外部记忆管理的实例 |
 
@@ -180,6 +181,17 @@ SP 命名在不同论文中不完全一致，应核对实际算法。DCP 的支�
 | [AReaL](https://arxiv.org/abs/2505.24298)（2025） / [官方项目](https://github.com/areal-project/AReaL) | 异步生成/训练、陈旧轨迹与算法适配的实例 | [08](08-post-training.md)、[17](17-training-engineering.md) |
 
 算法流程依据还包括前表 InstructGPT 与 DeepSeek-R1。论文/实现中的吞吐或质量结论有具体实验条件，不能推出所有异步 RL 都兼容任意旧样本或都有同等收益；本文不绑定某框架的默认参数。
+
+## Inference-Time Reasoning Systems
+
+| 原始论文 | 支持的机制与边界 | 正文 |
+| --- | --- | --- |
+| [Scaling LLM Test-Time Compute Optimally can be More Effective than Scaling Model Parameters](https://arxiv.org/abs/2408.03314)（2024） | 验证搜索、响应修订与按任务分配计算；效果依任务难度、模型及策略 | [13](13-multimodal-and-reasoning.md) |
+| [Tree of Thoughts](https://arxiv.org/abs/2305.10601)（2023） | 中间状态分支、评估、扩展与回溯的实例；不是全部模型的内部结构 | [13](13-multimodal-and-reasoning.md) |
+| [Self-Refine](https://arxiv.org/abs/2303.17651)（2023） | 生成、反馈和迭代修订；反馈仍可能错误 | [13](13-multimodal-and-reasoning.md) |
+| [Let's Verify Step by Step](https://arxiv.org/abs/2305.20050)（2023） | Outcome / process supervision 与步骤评分研究；评分不等于普遍正确性证明 | [13](13-multimodal-and-reasoning.md) |
+
+分支资源和生命周期表表达一般系统设计责任，不宣称上述论文都提供同一种 KV 管理、持久恢复或生产调度协议。训练时 RL 的策略更新入口见前表，第 14 章将资产、执行和生产请求接成完整路径。
 
 ## Training Data Engineering
 
