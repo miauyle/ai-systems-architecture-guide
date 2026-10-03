@@ -51,7 +51,8 @@ def check_navigation(errors):
             errors.append(f"navigation.json: missing summary for {path}")
         if f"]({target.name})" not in index:
             errors.append(f"docs/README.md: missing navigation entry {path}")
-        row = f"| [{title}]({target.name}) | {page.get('summary')} |"
+        display_title = re.sub(r"^\d+\s*·\s*", "", title)
+        row = f"| [{display_title}]({target.name}) | {page.get('summary')} |"
         if path.startswith("docs/") and re.match(r"\d\d-", target.name) and row not in index:
             errors.append(f"docs/README.md: navigation title/summary mismatch for {path}")
     chapters = {str(p.relative_to(ROOT)) for p in (ROOT / "docs").glob("[0-9][0-9]-*.md")}
