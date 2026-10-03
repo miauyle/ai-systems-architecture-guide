@@ -34,7 +34,12 @@ module AISystems
         group = groups.find { |g| g.fetch("pages").any? { |item| item["id"] == p["id"] } }
         add_document(site, collection, p.fetch("path"), p.fetch("title"), p.fetch("summary"), group ? group.fetch("title") : "查询与来源", routes)
       end
-      add_document(site, collection, "docs/README.md", "完整专题目录", "六个分组、核心专题与原始资料入口", "AI Systems Notes", routes)
+      # Build the site directory from navigation.json, matching distributed-storage-notes.
+      index = Jekyll::PageWithoutAFile.new(site, site.source, "docs", "index.html")
+      index.content = ""
+      index.data.merge!("layout" => "knowledge-directory", "path" => "navigation.json",
+                        "title" => "完整专题目录", "description" => "六个知识分组、专题正文与原始资料入口")
+      site.pages << index
     end
 
     def add_document(site, collection, path, title, description, category, routes)
