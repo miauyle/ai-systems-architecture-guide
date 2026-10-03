@@ -1,5 +1,13 @@
 # 更新记录
 
+## 2026-10-03 · 端到端整合与推理时 Reasoning 收口
+
+- 将 14 升级为全库总装图：构建/请求两条路径，dataset、checkpoint、model asset、执行产物和 replica 生命周期，三层调度、Runtime/Kernel/GPU 连接及 Model Ready/SLO 验收边界。
+- 保留企业知识助手案例，关联证据与真实业务回执；加入同权重 TTFT 退化的版本调查，以及输入供给、慢 rank 和 KV 压力的故障传播。
+- 深化 13 的 inference-time scaling：单轨迹、并行候选、best-of-N、反馈修订、验证搜索与工具交互，分支 KV/状态、预算、验证容量、关键路径与合格任务成本；区分训练时 policy update，并小幅连接多模态输入成本。
+- 同步知识地图、系统全景、README、术语和原始论文；导航仅同步 14 的实质性标题/摘要变化，路径、六组、主题与首页 11 个核心入口保持原规模。
+- 没有新增专题文件。正式进入 maintenance mode，后续只针对系统范式/机制重要变化、官方实现过时、事实错误及跨章关系/引用修正更新。
+
 ## 2026-10-03 · 最后一轮体系收口：观测、RL 系统与训练数据
 
 - 仅新增 31 Observability / Debugging：metrics/logs/traces/profiles 分工，请求与训练 step 关联、CPU/GPU timeline、工具层级、TTFT/utilization/hang/OOM 定位与版本血缘。

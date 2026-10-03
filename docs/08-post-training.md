@@ -89,6 +89,8 @@ Policy staleness 不是只看生成距今多久：要记录生成策略与当前
 
 ## 长 Reasoning 轨迹为什么改变系统效率
 
+本章的 reasoning rollout 用于参数更新；部署时的 candidate/search/verification/selection 与分支预算由[第 13 章](13-multimodal-and-reasoning.md)主责，不因生成和验证就自动更新 policy。
+
 长轨迹占用更多 rollout KV、Decode 轮次、轨迹字节和训练有效位置；工具等待延长状态驻留，分组奖励可能等待同组最后一条完成。截断率、通过验证的完成量、版本可用性及奖励/训练消费能力，需要与 raw rollout tokens/s 一起看。
 
 Rollout throughput 很高，不代表单位成本产生了更多可用学习信号：长失败回答、重复动作、奖励积压和 stale 样本弃用都可能消耗资源而不产生有效更新。最终仍以独立质量评估、达到目标所需时间/成本判断，不将更长推理或更高奖励自动等同于更强能力。

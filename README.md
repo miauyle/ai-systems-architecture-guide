@@ -31,9 +31,9 @@
 
 本库负责请求、执行、并行、资源与生产关系；[AI Storage Notes](https://miauyle.github.io/ai-storage-notes/)深入 KV 层级、RDMA、GDS、对象存储与 GPU Data Path，避免复制底层存储专题。
 
-本轮体系收口后进入维护、查漏补缺与技术演进更新阶段，停止主动横向新增专题；传统算法、完整视觉、推荐、强化学习理论与机器人不在当前扩充范围。本库不提供实时排行榜，不猜测未公开模型架构，也不把某篇论文的性能数字当作通用保证。
+体系收口后正式进入 maintenance mode，停止主动横向新增专题。后续修改针对明显的新系统范式、机制的重要变化、过时的官方接口/实现、事实错误，以及跨章节关系或引用修正；传统算法、完整视觉、推荐、强化学习理论与机器人不在当前扩充范围。本库不提供实时排行榜，不猜测未公开模型架构，也不把某篇论文的性能数字当作通用保证。
 
-[系统整合章节](docs/14-end-to-end-case.md)展示数据、模型、服务与业务状态如何连接；[知识地图](docs/00-learning-roadmap.md)解释各专题的依赖，不要求按文件编号阅读。
+[系统整合章节](docs/14-end-to-end-case.md)是全库“总装图”：从 dataset / checkpoint / model asset 到编译与副本就绪，再沿三层调度串起生产请求、RAG/Agent 与用户结果。[推理时 Reasoning](docs/13-multimodal-and-reasoning.md)连接 candidate、分支状态、验证和资源预算，并与训练时 rollout 区分；[知识地图](docs/00-learning-roadmap.md)解释各专题的依赖，不要求按文件编号阅读。
 
 ## 文档与网页
 

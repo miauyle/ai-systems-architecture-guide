@@ -138,3 +138,15 @@
 | GPU utilization / occupancy | 特定口径设备忙碌 / 驻留执行资源比例；二者不等于有效吞吐 | [31](31-ai-systems-observability-and-debugging.md) |
 | Straggler / exposed communication | 同步组迟到参与者 / 未被其他工作隐藏的通信等待 | [31](31-ai-systems-observability-and-debugging.md) |
 | Allocator reserved / fragmentation | allocator 保留容量 / 分配布局碎片；保留中活跃字节不可重复相加 | [31](31-ai-systems-observability-and-debugging.md) |
+
+## 推理时求解与端到端整合
+
+| 术语 | 含义与边界 | 正文 |
+| --- | --- | --- |
+| Candidate / branch state | 答案或中间候选及 parent、历史、评分与完成状态；不是只有一段文本 | [13](13-multimodal-and-reasoning.md) |
+| Parallel sampling / best-of-N | 多候选生成 / 生成后选择；不保证全部同时执行或选择正确 | [13](13-multimodal-and-reasoning.md) |
+| Verifier-guided search / iterative refinement | 验证信号引导扩展 / 候选与反馈进入下一轮；评分不是普遍正确性证明 | [13](13-multimodal-and-reasoning.md) |
+| Reasoning budget / early stop | 任务级计算、Token、时间与验证预算 / 停止扩展；预算耗尽不等于成功 | [13](13-multimodal-and-reasoning.md) |
+| Compiled artifact / running replica | 有适用条件的执行产物 / 具体资源上的运行实例；二者都不同于 checkpoint | [28](28-ai-compiler-and-runtime.md)、[14](14-end-to-end-case.md) |
+| Model Ready / SLO-ready | 模型执行路径就绪 / 约定负载下通过服务目标验收；Pod Running 不能替代 | [29](29-ai-platform-and-cluster-scheduling.md)、[14](14-end-to-end-case.md) |
+| Application / cluster / inference scheduler | 分别调度 Task/Tool、GPU/Replica、Token/KV；Router 另选择请求落点 | [14](14-end-to-end-case.md) |

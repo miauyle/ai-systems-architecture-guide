@@ -107,6 +107,10 @@ const report = { checks: [], errors: [] };
       }
     }
     report.checks.push(`all ${pages.length} knowledge pages: formula/diagram rendering, active sidebar, TOC, pager`);
+    for (const topic of ['13-multimodal-and-reasoning', '14-end-to-end-case']) {
+      await open('/docs/' + topic + '/');
+      await page.screenshot({ animations: 'disabled', path: path.join(evidence, topic + '-desktop-light.png'), fullPage: true });
+    }
     await open('/docs/31-ai-systems-observability-and-debugging/');
     await page.screenshot({ animations: 'disabled', path: path.join(evidence, 'observability-desktop-light.png'), fullPage: true });
     await open('/docs/04-transformer/');
@@ -155,6 +159,17 @@ const report = { checks: [], errors: [] };
     await open('/docs/10-serving-and-distributed/');
     await open('/docs/31-ai-systems-observability-and-debugging/');
     await open('/docs/15-data-lifecycle/');
+    for (const topic of ['13-multimodal-and-reasoning', '14-end-to-end-case']) {
+      await open('/docs/' + topic + '/');
+      await page.screenshot({ animations: 'disabled', path: path.join(evidence, topic + '-mobile.png'), fullPage: true });
+    }
+    await page.locator('#sidebarToggle').click();
+    const applicationGroup = page.locator('#sidebar .sidebar__group-title').filter({ hasText: '知识与行动' });
+    if (await applicationGroup.getAttribute('aria-expanded') === 'false') await applicationGroup.click();
+    await page.locator('#sidebar .sidebar__nav a[href="/ai-systems-notes/docs/14-end-to-end-case/"]').click();
+    assert.equal(await page.locator('#sidebarToggle').getAttribute('aria-expanded'), 'false');
+    assert.match(await page.locator('h1').textContent(), /从数据到生产请求的完整生命周期/);
+    report.checks.push('13/14: desktop and 320px rendering; updated integration title reachable from mobile navigation');
     report.checks.push('Observability is searchable; mobile drawer reaches the new chapter; 320px data/observability do not overflow');
     report.checks.push('390px and 320px: no page overflow, home/doc drawer, mobile TOC');
     assert.deepEqual(report.errors, [], 'Browser console errors');

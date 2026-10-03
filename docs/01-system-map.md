@@ -111,11 +111,13 @@ AI 系统可以做分类、预测、排序、生成、感知和行动，大模�
 
 ## 离线构建与在线执行怎样连接
 
-离线侧产出权重、配置、Tokenizer、索引、工具描述与评估记录；在线侧读取这些版本化产物，接收请求并产生结果。两侧通过资产而非抽象概念连接。
+离线侧从 dataset version、训练/后训练与 checkpoint 形成 model asset；执行栈准备兼容产物，平台完成 placement、加载与就绪后，在线请求才消费 running replica。企业知识索引另由资料处理路径发布，不必经过训练。Dataset、checkpoint、model asset、compiled artifact 与 replica 有不同生命周期，完整构建/请求路径及三层调度见[第 14 章总装图](14-end-to-end-case.md)。
 
 权重升级影响计算与缓存兼容；Tokenizer 或模板升级影响输入；索引升级影响证据；工具升级影响实际动作。同一个最终错误可能来自不同产物，因此系统观测要保留这些版本关系。
 
 “模型没变但答案变了”完全可能：资料、Prompt、工具数据或采样发生变化，输出就会变化。模型评估与整个应用评估需要分别记录。
+
+推理时还可以由控制器组织 candidate → search / verification → selection，管理分支、状态与预算，见[第 13 章](13-multimodal-and-reasoning.md)；它改变一次求解过程，不自动成为 rollout → reward → policy update 的训练闭环。
 
 ## 数据、计算与控制三条流
 
