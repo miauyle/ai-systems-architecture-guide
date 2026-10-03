@@ -82,7 +82,7 @@
           "id": "data-lifecycle",
           "title": "15 · AI 数据生命周期与一致性",
           "path": "docs/15-data-lifecycle.md",
-          "summary": "数据血缘、划分、更新与索引一致性"
+          "summary": "数据版本、mixture、采样打包、消费恢复与索引一致性"
         },
         {
           "id": "pretraining",
@@ -94,13 +94,13 @@
           "id": "post-training",
           "title": "08 · 后训练、适配与对齐",
           "path": "docs/08-post-training.md",
-          "summary": "SFT、DPO、在线 RL 与 LoRA 的计算路径"
+          "summary": "SFT/DPO、RL 轨迹与策略版本闭环、LoRA"
         },
         {
           "id": "training-engineering",
           "title": "17 · 训练系统：优化、并行与恢复",
           "path": "docs/17-training-engineering.md",
-          "summary": "梯度更新、Mesh/DTensor、并行组合、CP 与分片恢复"
+          "summary": "现代并行、CP、RL 分池与权重发布、分片恢复"
         }
       ]
     },
@@ -124,13 +124,13 @@
           "id": "serving-and-distributed",
           "title": "10 · 推理服务与分布式架构",
           "path": "docs/10-serving-and-distributed.md",
-          "summary": "请求生命周期、KV 所有权、P/D 池、集群路由与弹性"
+          "summary": "请求生命周期、KV 所有权、P/D 池、集群路由与 fleet"
         },
         {
           "id": "inference-engineering",
           "title": "18 · 推理引擎内部、容量与调度",
           "path": "docs/18-inference-engineering.md",
-          "summary": "分页与前缀共享、remote KV、迭代预算与执行就绪"
+          "summary": "分页与前缀共享、连续批处理、remote KV 与局部预算"
         },
         {
           "id": "compute-infrastructure",
@@ -221,6 +221,12 @@
           "title": "26 · 模型资产、版本与发布生命周期",
           "path": "docs/26-model-lifecycle.md",
           "summary": "模型资产、路由、版本、发布与回退"
+        },
+        {
+          "id": "ai-systems-observability-and-debugging",
+          "title": "31 · AI Systems Observability、Profiling 与系统排障",
+          "path": "docs/31-ai-systems-observability-and-debugging.md",
+          "summary": "请求/训练 trace、CPU/GPU timeline、profile 与故障定位"
         }
       ]
     }

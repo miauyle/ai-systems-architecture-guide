@@ -28,22 +28,7 @@
 
 ## 调度器为什么按迭代而不是整请求工作
 
-静态批处理在开始时固定一组请求，短请求完成后空位可能要等最长请求。Continuous Batching 在每轮模型执行前重建运行集合：移除完成/取消项，给可继续的 Decode 分配新位置，并在预算允许时加入 Prefill 工作。
-
-```mermaid
-flowchart TB
-    Q[等待队列] --> S[选择本轮 Token 工作]
-    R[仍活跃的请求] --> S
-    S --> K[准备 KV 与元数据]
-    K --> G[模型前向与采样]
-    G --> O[输出与停止判断]
-    O --> R
-    O --> F[结束并安全释放]
-```
-
-“连续”不代表可以任意时刻向已启动的 GPU 内核插入请求；改变通常发生在迭代边界。引擎用有效长度与偏移描述每条序列，避免请求互读内容。
-
-准入决定“是否承担这个请求”，调度决定“本轮运行哪段工作”。Token 计算预算、KV 容量、最长等待与 Decode 间隔是不同约束。长 Prefill 会使已活跃请求的下一 Token 等待；分块 Prefill 能限制单轮干扰，但增加调度与历史读取的开销。
+准入决定是否承担请求，引擎在迭代边界决定本轮 Token 工作；两者通过容量反馈与背压连接。Continuous Batching、分块 Prefill 和局部预算的主解释见[第 18 章](18-inference-engineering.md)，本章跟踪请求跨 worker 的生命周期。
 
 ## TP 怎样切矩阵，而不只是把权重放到多卡
 
@@ -141,26 +126,14 @@ P/D 解耦可分别安排资源，但也新增传输、双端预留与故障边�
 
 Fleet 是多个模型、副本和阶段池构成的服务集合。平台控制 model placement 和副本数，Router 选择请求落点，引擎进行本轮 Token 调度；三个决策时间尺度不同。跨副本不一定共享权重驻留、KV 命中或适配器集合。
 
-扩容包含获取权重、格式准备、GPU 加载、通信组初始化、编译/图准备和预热。Pod Running 不等于 model ready；新副本没有热前缀，即使权重文件命中节点缓存，早期 TTFT 仍可能偏高。多个副本一起加载还会竞争存储与网络。编译状态见[第 28 章](28-ai-compiler-and-runtime.md)，设备与加载路径见[第 27 章](27-compute-infrastructure.md)。
-
-Autoscaling 应关联到达率、等待工作、TTFT/ITL、活跃 KV 与阶段压力；仅按 GPU utilization 扩卡会错过 CPU/网络瓶颈。P/D 池应分别观察又协调比例，预留启动时间与突发余量。缩容先停止接新请求，再 drain 活动请求；转移活动 KV、重新计算或终止各有代价，不能直接删除副本当作无损缩容。
-
-集群 placement 与 GPU/NIC affinity 见[第 29 章](29-ai-platform-and-cluster-scheduling.md)，SLO 驱动容量和成本见[第 30 章](30-ai-systems-performance.md)。
+服务控制面只把真实 model-ready 的副本加入可路由集合，并在缩容时先撤销准入、处理已有请求所有权。冷启动、权重加载、autoscaling 与 drain 的主解释见[第 29 章](29-ai-platform-and-cluster-scheduling.md)；本章的交接协议决定活动请求能否迁移/续流，不能由删除副本代替。
 
 ## 本库与 AI Storage 的分工
 
-本库解释 request lifecycle、scheduler、KV ownership、routing、Prefill / Decode、SLO 与 cluster-level serving。Remote KV 是从其他位置取得兼容状态，KV offload 是将本地活动/缓存状态移出紧缺层级；它们在这里作为调度和可用性边界出现，具体读写与存储组织见[第 18 章](18-inference-engineering.md)的接口关系。
+本库解释 request lifecycle、scheduler、KV ownership、routing、Prefill / Decode、SLO 与 cluster-level serving。Remote KV / offload 的定义与本地执行接口由[第 18 章](18-inference-engineering.md)主责；本章消费其位置/就绪信号并维护请求交接。
 
 [AI Storage Notes](https://miauyle.github.io/ai-storage-notes/)深入 KV 的 GPU HBM / CPU DRAM / SSD / remote cache 层级、RDMA、GDS、object storage、GPU Data Path 与 S3 over RDMA。本库不复制这些底层实现；Serving 必须知道传输何时完成、状态是否有效、失败是否可重建，而无需在这里重复存储协议教程。
 
 ## 指标要与边界和负载一起定义
 
-TTFT 应明确从客户端发送、服务接收还是引擎接收计时，包含的排队、预处理、Prefill 与传输不同。Inter-token latency / TPOT 也要说明是引擎 Token 还是客户端可见事件，流式合并会改变观测。
-
-吞吐需区分输入和输出 Token，并记录输入/输出长度分布、并发、缓存命中与质量约束。峰值 tokens/s 不等于服务容量；更有用的是满足首响应、后续间隔和错误率目标时的有效请求量。量化、推测解码与缓存策略见[推理引擎](18-inference-engineering.md)。
-
-模型文件缓存、KV 前缀缓存和业务答案缓存复用的对象、失效条件及权限不同。容量回归与生产观测见[第 22 章](22-evaluation-and-production.md)。
-
-指标的统一定义、关键路径归因与 SLO 容量方法见[AI Systems 性能模型](30-ai-systems-performance.md)。
-
-调度依据：[Orca](https://www.usenix.org/conference/osdi22/presentation/yu)、[PagedAttention](https://arxiv.org/abs/2309.06180)；通信语义见[NCCL 集体操作](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/collectives.html)。
+服务同时记录入口、引擎与客户端输出边界，保持请求及 attempt 关联。TTFT、TPOT/ITL、有效吞吐与 SLO 容量的统一定义见[第 30 章](30-ai-systems-performance.md)，跨组件 trace 和排障见[第 31 章](31-ai-systems-observability-and-debugging.md)，上线验收见[第 22 章](22-evaluation-and-production.md)。

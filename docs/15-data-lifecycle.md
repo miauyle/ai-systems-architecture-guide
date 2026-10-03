@@ -35,15 +35,63 @@
 
 更合理的划分单位可以是文档家族、用户、时间或任务来源，取决于目标泛化。预测未来事件时按时间划分，不能使用未来资料补全过去样本。学习新用户行为时，同一用户跨集合也可能夸大效果。
 
-去重不是完全消除重复：重要知识和稀有领域有时需要合适采样。关键是把重复作为可观察的数据分布因素，而不是只看总文件数。
+去重与 rare data 的覆盖可能冲突：模板相似不一定语义冗余，低资源语言、代码结构和少见任务可能被过度删除。保留去重簇、阈值和过滤原因，按领域/语言审计删除比例，必要时采用分层规则；保留稀有覆盖不等于放任测试泄漏。依据：[Deduplicating Training Data Makes Language Models Better](https://aclanthology.org/2022.acl-long.577/)，其特定实验结果不构成所有数据集的统一收益。
+
+Contamination detection 还要查训练、validation 与 benchmark 的问题、答案、解释、译文/改写和同源材料。精确字符串未命中不证明无污染；近重复与语义检测有误报/漏报，应保留判定依据与人工抽查。验证集反复用于筛数据或调 mixture 也会形成开发适配，最终仍需独立留出集；公开评测内容要有明确保护与排除规则。改写污染的原始研究见[Rethinking Benchmark and Contamination](https://arxiv.org/abs/2311.04850)。
 
 ## 训练输入的供给链
 
-存储读取、解压、解析、Tokenization、样本拼接、主机缓冲和设备搬运共同形成训练输入链。GPU 空闲可能来自任一环节，不能直接归结成存储带宽不足。
+Raw Data → Parse / Clean → Dedup / Filter → Dataset Version → Mixture → Shard → Sample / Pack → DataLoader → Host Buffer → GPU → Training Step。物理存储分片、样本分配和 Token 打包是不同责任，不能只用“数据已经分片”说明完整输入合同。
 
-小文件造成元数据与请求开销，大顺序分片改善读取，却增加随机访问与更新粒度。缓存与预取隐藏延迟，必须处理容量、预取浪费和跨节点重复读取。数据分片还要与训练采样规则匹配，避免多个 worker 重复读同一批样本。
+| 对象 | 谁产生、谁消费 | 必须固定的状态 |
+| --- | --- | --- |
+| Dataset manifest | 构建/整理流程产生，采样/恢复系统读取 | 内容标识/checksum、shard 清单、样本/Token 统计、split、解析/过滤/Tokenizer 版本 |
+| Dataset version | 验证后发布的数据快照，mixture 引用 | 不可变内容与处理规则；可变 URL 或文件夹名不是充分版本身份 |
+| Mixture | 训练策略指定，sampler 消费 | 数据源版本、权重、计数口径、耗尽/重采样策略和随进度变化的计划 |
+| Sample / pack state | sampler/packer 产生，DataLoader 消费 | shuffle/RNG、样本与边界、未打包余项、监督位置与有效 Token |
+| Host buffer | loader/CPU 准备，H2D 与训练消费 | 预取队列、传输依赖与可复用边界，见[物理路径](27-compute-infrastructure.md) |
 
-保存数据游标时，需要包含采样器、随机状态、分片版本及未完成批次的语义。只记“读到第几个文件”，未必能在打乱和多 worker 预取后等价恢复。
+Manifest 应指向可验证内容与处理血缘，而非只列若干地址。数据版本也是模型可复现性的一部分：相同代码与 weights 起点，换了清洗、Tokenizer、split 或 mixture 就可能训练出不同结果。
+
+## Mixture、采样权重与 Token budget
+
+Sampling weight 要说明是在“选择一个数据源/样本”还是“分配有效 Token 份额”。相同样本抽样概率在长度不同的数据源上不产生相同 Token 比例；token-based sampling 可以按目标 Token 配比组织采样，但应区分输入 Token、非 padding Token 与参与损失的监督 Token。
+
+Epoch 表示对明确数据集合的一轮遍历；带重采样的 mixture 或无限 streaming dataset 不一定有自然的全局 epoch。Token budget 用消费口径定义训练进度和停止边界；数据源耗尽后是结束、重新采样还是重归一化，需要固定，否则实际配比会漂移。
+
+Curriculum / mixture change 按进度改变来源或长度，应记录计划版本、生效更新点与实际消费份额。它是训练分布变化，不只是 DataLoader 的性能开关。数据加权的代表性研究见[DoReMi](https://arxiv.org/abs/2305.10429)，不能把某组权重当作任意模型/任务的最优配比。
+
+## Packing 不应改变样本监督语义
+
+Sample packing 可指按长度把样本分配到批次/槽位，sequence packing 则常指将多个样本放进同一执行序列；术语随实现变化，必须核对是否跨样本 Attention、怎样处理位置和 loss mask。
+
+若训练目标要求样本独立，拼接后应保护样本边界、位置、因果/块级 Attention mask 与标签移位，不能让前一条回答成为后一条样本的未授权上下文。若有意训练连续文档，则是另一种目标。减少 padding 不意味着可以删除真实边界；SFT 的工具/用户段也不能因为 packing 就变成监督回答。
+
+Packer 可能保留不足一个序列的余项。截断、丢弃、跨批次拼接和恢复该余项决定实际看到哪些 Token，须与预算、统计和 checkpoint 对齐，而不是只报告打包后 batch size。
+
+## Shuffling、distributed sampler 与 worker ownership
+
+Map-style 数据可先打乱索引再分配；streaming dataset 按需迭代，通常用 shard 顺序和有限 shuffle buffer 近似打乱，不等于对全量数据做均匀随机排列。buffer 大小、seed、epoch、数据源顺序和耗尽策略都影响看到的分布。
+
+数据并行 rank 通常领取不同样本；TP/CP 等协同计算同一样本的成员不能各自随意抽一条新样本。再考虑每个 rank 内的 DataLoader workers：明确 rank × worker 的 shard/样本归属，否则复制一个 IterableDataset 对象可能导致多 worker 重复读取。分片数量也限制有效并行度。
+
+DistributedSampler 的补齐或丢尾策略可能重复/遗漏部分样本，打乱也要按实现更新 epoch/seed。存储 shard 是 I/O 单位，不自动等于 sampling weight，也不保证数据源混合均匀。官方机制入口：[PyTorch Dataset / DataLoader / DistributedSampler](https://docs.pytorch.org/docs/stable/data.html)、[Hugging Face Dataset streaming](https://huggingface.co/docs/datasets/stream)。具体 worker 分配、可恢复接口与状态支持可能变化。
+
+小文件的请求开销、大分片的更新粒度和预取造成的主机压力影响供给；GPU 等输入也可能是 CPU 解析或不均衡 shard。定位方法见[第 31 章](31-ai-systems-observability-and-debugging.md)，不在本章重复硬件与 I/O 深层机制。
+
+## DataLoader resume 要恢复已经消费的进度
+
+读到的位置、已预取的位置与训练更新实际消费的位置不同。Checkpoint 的数据进度应和一致更新点对齐；若直接从最远预取游标续读，会跳过从未用于更新的样本，退得过多则可能重复训练。
+
+| 恢复对象 | 需要保存或可重建的语义 |
+| --- | --- |
+| Dataset / mixture version | 固定内容、比例、curriculum 生效点及耗尽策略 |
+| Sampler / shard | 顺序、归属、偏移、epoch 和已提交消费位置 |
+| RNG / shuffle | 各相关随机流与 buffer 的恢复/重建约定 |
+| Packing / loader | 未完成余项、worker 状态及预取样本如何重放或丢弃 |
+| Consumed token progress | 明确有效计数、对应更新点，避免将预取量当成训练量 |
+
+不是所有 loader 都支持严格恢复这些状态。可以保存完整状态，也可以从可重建边界确定性重放并跳过已消费部分；必须说明代价与是否等价。拓扑/worker 数改变时，旧本地游标要映射为全局消费进度，不能逐 rank 机械接续。Weights/optimizer 的分片提交和 reshard 由[第 17 章](17-training-engineering.md)主责；数据消费合同由本章主责。
 
 ## 索引更新是多产物发布
 
@@ -69,6 +117,10 @@
 
 线上输出不是天然可靠的训练标签。用户点赞可能反映措辞偏好，人工改写可能含有新的错误，自动采集的模型输出可能放大旧模型偏差。
 
-反馈要保留来源、任务、模型版本和验证状态，再进入清洗与采样。评估集需要与调参反馈保持边界；否则系统“越来越高分”可能只是越来越熟悉测试题。
+Training Output / Production Feedback → Validation → Data Curation → New Dataset Version，再由 mixture 选择进入下轮训练。评估集需要与调参反馈保持边界；否则系统“越来越高分”可能只是越来越熟悉测试题。
+
+Synthetic / model-generated data 保留生成模型、模板、采样策略、seed（适用时）、来源/工具依据、筛选和 verifier 版本。过滤可用规则、程序检查、独立模型或人工，但生成与判分共用同一种偏差可能造成自证；来源合法、污染检查与独立验证不能因为它是“合成数据”而省略。
+
+Data quality metrics 应按来源/语言/领域统计解析失败、过滤/去重比例、长度、重复簇、稀有覆盖、污染告警与有效监督 Token，并和留出任务质量联系。单一质量分、更多 Token 或更高 verifier 通过率不充分证明数据更好；采样策略也可能只留下容易案例。新版本需验证后发布，不能直接把生产输出追加成可信标签。
 
 相关章节：[机器学习与泛化](23-machine-learning-foundations.md)、[模型生命周期](26-model-lifecycle.md)、[安全边界](25-ai-security.md)。

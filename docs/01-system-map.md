@@ -50,7 +50,13 @@ Eager 可以直接分派已有 Kernel，编译也可以调用现有库，不能�
 
 入口：[执行栈](28-ai-compiler-and-runtime.md)、[现代并行](17-training-engineering.md)、[集群 Serving](10-serving-and-distributed.md)、[平台调度](29-ai-platform-and-cluster-scheduling.md)、[性能模型](30-ai-systems-performance.md)。Production 的质量验收与故障评估见[第 22 章](22-evaluation-and-production.md)。
 
-## 一次请求的生命周期
+## 完整主线与横切能力
+
+Data → Model → Training / Post-training → Tensor / Graph → Compiler / Runtime → Kernel → GPU / Network / Storage Interface → Distributed Runtime → Cluster Platform → Inference Serving → RAG / Agent → Evaluation / Lifecycle。这是知识与资产的依赖主线，不是每个在线请求的串行执行步骤；RL rollout 还把生成和验证反馈到训练。
+
+数据 manifest/mixture 与消费进度见[第 15 章](15-data-lifecycle.md)，策略版本/轨迹与训练更新的闭环见[第 08 章](08-post-training.md)、[第 17 章](17-training-engineering.md)。[Performance](30-ai-systems-performance.md)定义有效工作与 SLO，[Observability](31-ai-systems-observability-and-debugging.md)连接请求/step、执行与版本证据，[Security](25-ai-security.md)规定信任、权限与隔离；三者贯穿各层，不建立第七个分组。
+
+## 一次请求的生命周期与应用边界
 
 ```mermaid
 sequenceDiagram

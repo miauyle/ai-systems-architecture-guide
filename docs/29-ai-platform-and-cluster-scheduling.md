@@ -97,13 +97,21 @@ GPU 配额只管数量会遗漏 NIC、存储和主机资源竞争。多个租户
 
 训练中一个 rank 丢失可能使原组 collective 无法完成。协调者要终止或隔离旧尝试，释放资源，建立新组，从一致 checkpoint 恢复；新拓扑 reshard 见[第 17 章](17-training-engineering.md)。持续等待失联 rank 既占资源，也不能提供有效训练吞吐。
 
-Serving 要撤销故障副本路由，清理失效缓存索引，并按请求状态重试或返回错误。版本/代次区分旧 worker 与新 worker，避免同名 Pod 让旧 KV 位置被误认为仍有效。健康检查应包含模型、通信组和必要依赖；某个 HTTP 端口能响应不等于整个并行副本可完成前向。
+Serving 平台撤销故障副本并发布新的实例代次，确保同名重建不复用旧健康身份；请求与 KV 恢复协议由[第 10 章](10-serving-and-distributed.md)主责。健康检查应包含模型、通信组和必要依赖；HTTP 端口能响应不等于整个并行副本可完成前向。
+
+## Cold start：从分配到真实 model-ready
+
+冷启动可能经历资产获取 → 格式/分片准备 → GPU 加载 → 通信组初始化 → 编译/图准备 → 预热 → 组级就绪。顺序与重叠因实现变化；平台记录每阶段的开始、失败和就绪条件，而非只看 Pod Running。
+
+节点文件缓存减少下载，不消除设备加载或加载分片到执行分片的转换。新 replica 的 Prefix Cache 常为空；编译冷热、量化转换和旧/新格式同时驻留影响启动时间与峰值。多个副本一起扩容会冲击存储、NIC 和 CPU，预热也占 GPU，需限制同时启动量。
+
+Model-ready 应对应真实并行组、模型版本与支持输入路径，不能用一次短请求成功替代所有必要初始化。失败副本不得接流量；启动超时、重试和资源清理属于 workload lifecycle。物理加载路径见[第 27 章](27-compute-infrastructure.md)，编译产物生命周期见[第 28 章](28-ai-compiler-and-runtime.md)。
 
 ## Model placement、replica routing 与 autoscaling
 
-Model placement 决定模型或阶段驻留在哪些设备，replica routing 决定一个请求选哪个已就绪副本，引擎调度决定下一轮运行哪些 Token。Gateway API 的 InferencePool / Endpoint Picker 提供模型服务池与端点选择的机制入口，不负责把 GPU 分配给 Pod，也不自动完成 P/D 交接。
+Model placement 决定模型或阶段驻留在哪些设备，并向请求控制面发布可用版本/副本集合。Replica routing 与 P/D 交接由[第 10 章](10-serving-and-distributed.md)主责，引擎迭代由[第 18 章](18-inference-engineering.md)主责。Gateway API 的 InferencePool / Endpoint Picker 提供池与端点选择入口，不分配 GPU 或自动完成 KV 交接。
 
-新增 replica 需等待权重加载、通信、编译和预热；新副本的 Prefix Cache 常为空。Autoscaling 根据队列、长度分布、TTFT/ITL、容量和启动时间预判所需资源。GPU 忙若是通信/重算，扩卡可能继续加压网络；负载下降后也要有稳定窗口，避免频繁启动与清空热缓存。
+Autoscaling 根据队列、长度分布、TTFT/ITL、容量和上述启动时间预判资源需求。负载下降后也要有稳定窗口，避免频繁启动与清空热缓存。指标定义与 SLO 工作点由[第 30 章](30-ai-systems-performance.md)主责，扩卡前的瓶颈证据由[第 31 章](31-ai-systems-observability-and-debugging.md)主责。
 
 服务缩容先从可接请求集合摘除，等待 drain，再释放设备；已有请求若要迁移，需要[第 10 章](10-serving-and-distributed.md)的所有权协议。P/D pool 分别扩容却必须平衡生产与消费，避免 Prefill 产出的 KV 堆积。机制入口：[InferencePool](https://gateway-api-inference-extension.sigs.k8s.io/api-types/inferencepool/)。
 

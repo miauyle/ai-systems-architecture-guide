@@ -46,7 +46,7 @@ Attention 按块表读取，不把序列语义也打乱。大块减少元数据�
 
 活跃引用的块通常必须保留，空闲但仍在索引里的前缀块可在压力下淘汰。它们都占物理容量，但后者可回收；将两者混为“空闲显存”会误判还能接多少请求。
 
-长而低复用的前缀可能挤走高复用块。路由至已有前缀的副本能减少 Prefill，但也可能造成热点；最低排队和最高命中未必是同一节点。
+长而低复用的前缀可能挤走高复用块。跨副本的命中、负载与 locality 取舍由[第 10 章](10-serving-and-distributed.md)主责；本章负责落地后的引用与可回收容量。
 
 集群 Router 还需要判断模型副本、拓扑与预期传输。它看到的缓存位置不必等于引擎当前可用块；请求落地后，引擎负责重新校验、引用和安全分配。完整集群路径与执行所有权见[服务架构](10-serving-and-distributed.md)。
 
@@ -59,8 +59,8 @@ Remote KV 说明状态可从另一 worker 或缓存服务取得；offload 说明
 | 对象 | 谁产生、谁消费 | 引擎必须维护的状态 |
 | --- | --- | --- |
 | 远端可复用前缀 | 先前计算产生，不同兼容请求复用 | 前缀键、版本、有效位置、权限、远端有效性 |
-| 活动请求 offload | 本轮已有历史被迁出，后续 Decode 再消费 | 请求所有权、源/目标引用、已计算长度、恢复依赖 |
-| P/D transfer | Prefill 源产生，Decode 目标接收 | 目标空间、分片布局、交接代次、可读完成标识 |
+| 活动请求 offload | 本轮已有历史被迁出，后续 Decode 再消费 | 局部引用、已计算长度、恢复依赖 |
+| P/D transfer | Prefill 源产生，Decode 目标接收 | 目标块、分片布局、本地映射、可读完成标识；交接代次/所有权见第 10 章 |
 
 常见取回路径需要先分配目标块，发起传输/重排，等待数据设备可读，再发布给下一轮调度。少数执行 backend 支持其他访问方式，仍要核对同步和布局合同。物理块 ID 是局部 allocator 的地址解释，不能原样从另一 worker 拷贝一张块表就当作有效本地映射。
 
@@ -69,6 +69,23 @@ Remote KV 说明状态可从另一 worker 或缓存服务取得；offload 说明
 取回失败时可回退重算兼容前缀或重建已知 Token 历史，但要清理不完整目标，保留仍有效的源引用，并检查请求 deadline。若模型/适配器、位置或精度布局不匹配，应失效而非复用。远端缓存可消失；除非系统明确提供持久合同，不能把它当作唯一恢复记录。
 
 底层层级、格式、RDMA/GDS 和读写路径由[AI Storage Notes](https://miauyle.github.io/ai-storage-notes/)深入说明。本章负责引擎状态与可执行边界，集群交接由[第 10 章](10-serving-and-distributed.md)解释。具体 connector 实例见[vLLM Disaggregated Prefill](https://docs.vllm.ai/en/latest/features/disagg_prefill/)，接口和支持组合可能变化。
+
+## Continuous Batching 在迭代边界改变运行集合
+
+静态批处理开始时固定请求集合，短请求完成后空位可能等待最长请求；Continuous Batching 每轮移除结束项，为继续的 Decode 准备新位置，并按预算加入 Prefill。改变发生在执行边界，不是在已启动 Kernel 中任意插入新请求。
+
+```mermaid
+flowchart TB
+    Q[等待队列] --> S[选择本轮 Token 工作]
+    R[活跃请求] --> S
+    S --> K[KV 与张量元数据]
+    K --> G[前向与采样]
+    G --> O[输出与停止判断]
+    O --> R
+    O --> F[结束与安全释放]
+```
+
+有效长度、偏移与块表保持请求隔离。Chunked Prefill 将长输入分段，限制单轮对 Decode 的干扰；代价包括额外调度和历史读取。机制依据：[Orca](https://www.usenix.org/conference/osdi22/presentation/yu)。
 
 ## 一轮调度同时受三笔预算约束
 
@@ -86,21 +103,15 @@ Router 选择低预计成本的目标，引擎仍要承担真正的空间与迭�
 
 P/D 分离中，Decode pool 应为接收 KV 和继续增长保留预算，而非仅检查当前 Prefill 状态放得下。预计输出长度只是估计，可用输出上限、分段准入或压力控制定义风险边界。引擎拒绝/等待必须反馈上层，避免 Prefill 持续生产没有消费者的状态。
 
-本地命中可能被长队列抵消，远端取回可能被网络拥塞抵消，更多本地缓存也可能压缩活动请求容量。比较这些策略要看完成请求的 SLO，而非单独最大化 cache hit rate。全局路由、局部 Token 调度和 KV locality 的取舍见[性能模型](30-ai-systems-performance.md)。
+局部准入必须反馈真实等待/拒绝与容量，不能把路由估计当作预留成功。全局目标冲突见[第 10 章](10-serving-and-distributed.md)，比较准入方案的 SLO 口径见[第 30 章](30-ai-systems-performance.md)。
 
 ## 编译与 CUDA Graph 如何进入一轮执行
 
-调度器输出的序列数、新 Token 数、长度、块表和布局决定本轮 Kernel 的形态。编译产物可能对 shape/stride/dtype 有适用条件；CUDA Graph 重放通常需要引擎准备相容的稳定地址与元数据。连续批次会变化，因此实现可选择分桶图、部分捕获或不捕获路径。
-
-引擎将本轮输入写入相应缓冲，保护 KV 与图引用，在设备依赖完成后再复用地址。重放减少提交开销，不代替调度、不自动恢复 KV，也不保证所有动态批次都命中图。多个图/编译变体与工作区会影响 KV 池剩余空间；冷启动要等这些准备达到实际就绪要求。
-
-模型图捕获与 CUDA Graph 的分工见[Compiler / Runtime](28-ai-compiler-and-runtime.md)。副本初始化、健康、drain 与 autoscaling 则属于[集群平台](29-ai-platform-and-cluster-scheduling.md)。
+本轮序列数、Token 数、长度、块表和布局要满足编译/图产物的适用条件；引擎更新输入元数据，并保护 KV 与图所用缓冲直到设备消费者完成。变体/持久工作区压缩本地 KV 池预算。Graph capture、CUDA Graph 与地址/动态形状机制由[第 28 章](28-ai-compiler-and-runtime.md)主责；初始化就绪由[第 29 章](29-ai-platform-and-cluster-scheduling.md)主责。
 
 ## 为什么小批次 Decode 常受带宽限制
 
-投影和 FFN 每轮访问大批权重，小批次每份权重服务的新 Token 很少，复用不足；Attention 又读取历史 KV。较大批次提高权重复用，却增加 KV 容量、读流量和排队。
-
-判断瓶颈时可分别看“算术量 / 有效算力”和“搬运字节 / 有效带宽”，再考虑通信与同步关键路径。不能简单相加成所有内核的统一耗时模型，缓存和重叠会改变结果。不要拿硬件峰值替代测得有效值，详见[基础设施](27-compute-infrastructure.md)。
+引擎不能只按本轮新 Token 数估时间，还需考虑权重复用与历史 KV 访问；统一的 Decode 带宽、算术强度与 Roofline 分析见[第 30 章](30-ai-systems-performance.md)。本章的三笔预算将这些约束落实为可运行的迭代集合。
 
 TP 缩小每卡部分权重与计算，却增加层内归约；长上下文可能把瓶颈移到 KV，少 K/V 头的模型不一定均匀分片。矩阵切分见[第 10 章](10-serving-and-distributed.md)。
 
@@ -124,8 +135,8 @@ KV 量化是另一个选择：旧值会被多轮查询反复使用，误差也�
 
 ## 性能变化必须保留可比较的语义
 
-测量固定模型与生成参数，分别记录输入/输出长度、并发、前缀命中、停止原因和质量；报告 TTFT、后续间隔、吞吐与错误率。新策略若减少输出长度、放宽质量或丢请求，不能只把 tokens/s 的变化称为优化。
+引擎变更必须保留真实输入、停止原因与质量语义；性能比较和计时定义由[第 30 章](30-ai-systems-performance.md)主责，迭代到请求的观测关联见[第 31 章](31-ai-systems-observability-and-debugging.md)。
 
 缓存错误还需通过完整前向与增量前向一致性、多请求隔离、分块续写、取消和分叉路径验证。系统优化的约束是“仍执行正确请求”，不仅是 GPU 更忙。
 
-统一的 TTFT、TPOT/ITL、容量、排队与成本定义见[第 30 章](30-ai-systems-performance.md)，生产验收见[第 22 章](22-evaluation-and-production.md)。
+这些状态路径的生产验收见[第 22 章](22-evaluation-and-production.md)。

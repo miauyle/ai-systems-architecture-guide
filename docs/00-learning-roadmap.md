@@ -27,9 +27,14 @@ flowchart TB
     EV -.-> INF
     EV -.-> RET
     EV -.-> AG
+    OBS[Observability] -.-> TR
+    OBS -.-> INF
+    OBS -.-> HW
+    OBS -.-> APP
+    OBS -.-> EV
 ```
 
-评估并非最后才开始：训练需要知道目标是否有效，检索需要知道证据是否覆盖，推理需要知道质量和性能，行动需要知道真实业务效果。安全同样贯穿数据与执行。
+评估并非最后才开始：训练需要知道目标是否有效，检索需要知道证据是否覆盖，推理需要知道质量和性能，行动需要知道真实业务效果。Performance、Observability 和 Security 都横切各层；图中虚线表示观测关联，不是请求数据流。[可观测性](31-ai-systems-observability-and-debugging.md)连接训练、Serving、基础设施、应用和生产。
 
 ## 三条连续脉络
 
@@ -68,14 +73,30 @@ Compiler、Platform 与 Performance 仍归入“推理与基础设施”，同�
 | [计算布局](16-transformer-implementation.md)、[硬件](27-compute-infrastructure.md) | [Compiler / Runtime](28-ai-compiler-and-runtime.md) | 张量图如何变成 Kernel 和设备执行 |
 | [训练](17-training-engineering.md)、[Serving](10-serving-and-distributed.md) | [集群平台](29-ai-platform-and-cluster-scheduling.md)、[性能](30-ai-systems-performance.md) | 分布式状态如何落到资源 placement 与 SLO 容量 |
 
-## 跨章共同对象
+## 主解释章节：一个机制一个入口
+
+| 主负责章节 | 机制边界 |
+| --- | --- |
+| [15 · 数据](15-data-lifecycle.md) | manifest/version、mixture、sampling/packing、loader 消费恢复与污染 |
+| [08 · 后训练](08-post-training.md)、[17 · 训练工程](17-training-engineering.md) | 08 负责 RL 轨迹/策略陈旧的语义；17 负责 GPU 分池、权重发布、并行与 checkpoint |
+| [10 · Serving](10-serving-and-distributed.md) | 请求生命周期、Gateway/Router、P/D transfer、KV ownership、fleet |
+| [18 · 引擎](18-inference-engineering.md) | KV block/page、prefix、迭代批处理/局部容量、remote/offload 接口、量化/推测 |
+| [27 · 硬件路径](27-compute-infrastructure.md) | GPU/HBM/CPU、互联、NCCL primitive 与物理传输边界 |
+| [28 · 执行栈](28-ai-compiler-and-runtime.md) | graph/IR、compiler/runtime、Kernel、Triton/CUDA、CUDA Graph |
+| [29 · 平台](29-ai-platform-and-cluster-scheduling.md) | allocation/placement、topology、gang、租户、cold start、autoscaling/组级恢复 |
+| [30 · 性能](30-ai-systems-performance.md) | TTFT/TPOT/ITL、吞吐/容量/成本、queueing、Roofline/Amdahl/Little、SLO |
+| [31 · 观测与排障](31-ai-systems-observability-and-debugging.md) | trace 关联、timeline/profile、GPU utilization、hang/OOM 与根因证据 |
+
+其他章节只从自己的对象解释连接和约束，并链接主入口；checkpoint、集群失败恢复与请求恢复分别属于训练一致点、workload 组生命周期和流式请求状态，不能混成一个万能恢复机制。
+
+## 跨章共同对象与血缘
 
 参数由训练改变，激活是一次计算的表示，KV 是可复用的请求状态，索引是派生知识产物，业务状态是真实外部事实。每种对象有自己的更新、共享和失效规则。
 
 这些对象的生命周期见[数据](15-data-lifecycle.md)与[模型资产](26-model-lifecycle.md)。权限和信任边界见[安全](25-ai-security.md)。系统全景见[第 01 章](01-system-map.md)，组件整合见[第 14 章](14-end-to-end-case.md)。
 
-## 范围与扩展
+## 范围与维护
 
-当前主线深入大模型驱动的系统，另外建立通用学习基础、生成家族与硬件关系。它尚未覆盖全部 AI 学科。后续传统学习、视觉、推荐、控制和机器人专题应在各自任务与表示层扩展，保持与现有系统脉络的连接。
+当前主线深入大模型驱动的系统，另外建立通用学习基础、生成家族与硬件关系。体系收口后不再主动横向扩张；维护重点是跨章一致性、缺失机制与技术演进，不以覆盖全部 AI 学科为目标。
 
 文件编号是稳定标识；分组目录表达当前体系，未来站点侧栏使用同一关系。原始依据集中在[参考资料](references.md)。

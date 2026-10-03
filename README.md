@@ -17,7 +17,7 @@
 | 数据与训练 | 数据怎样形成学习信号，后训练怎样改变行为，分布式怎样管理状态 | [预训练](docs/07-pretraining.md)、[后训练](docs/08-post-training.md)、[数据生命周期](docs/15-data-lifecycle.md)、[训练系统](docs/17-training-engineering.md) |
 | 推理与基础设施 | 从张量图与 Kernel 到集群路由、资源与 SLO | [编译与运行时](docs/28-ai-compiler-and-runtime.md)、[服务架构](docs/10-serving-and-distributed.md)、[引擎](docs/18-inference-engineering.md)、[计算基础设施](docs/27-compute-infrastructure.md)、[集群调度](docs/29-ai-platform-and-cluster-scheduling.md)、[性能模型](docs/30-ai-systems-performance.md) |
 | 知识与行动 | 外部证据怎样进入回答，工具怎样变成可恢复的任务执行 | [RAG 与工具](docs/11-rag-and-agents.md)、[检索工程](docs/19-retrieval-engineering.md)、[Agent 运行时](docs/20-agent-runtime.md)、[规划与记忆](docs/21-agent-planning-and-memory.md) |
-| 评估与生命周期 | 如何判断质量、管理安全边界、升级和回退系统 | [评估](docs/12-evaluation.md)、[安全](docs/25-ai-security.md)、[模型生命周期](docs/26-model-lifecycle.md)、[生产评估](docs/22-evaluation-and-production.md) |
+| 评估与生命周期 | 如何观测排障、判断质量、管理安全边界、升级和回退系统 | [评估](docs/12-evaluation.md)、[可观测性与排障](docs/31-ai-systems-observability-and-debugging.md)、[安全](docs/25-ai-security.md)、[模型生命周期](docs/26-model-lifecycle.md)、[生产评估](docs/22-evaluation-and-production.md) |
 
 模型结构决定计算关系，训练决定参数怎样形成，执行系统决定计算怎样在资源中运行，应用决定知识、权限和动作怎样组织。理解这几层的连接，是本知识库的主线。
 
@@ -27,11 +27,11 @@
 
 ## 内容范围
 
-当前包含 30 个专题正文与一份知识地图。模型、训练、推理、检索与 Agent 有基础和机制深入两层；Compiler / Runtime、集群调度与性能模型补齐执行中间层。机器学习与生成家族提供通用脉络，不把全部 AI 等同于大语言模型。
+当前包含 31 个专题正文与一份知识地图。数据版本与消费进度、Reasoning/RL 的采样—更新闭环、执行中间层及集群 Serving 连接为完整主线；Performance、Observability 与 Security 是贯穿训练、基础设施、应用和生产的横切能力。机器学习与生成家族提供通用脉络，不把全部 AI 等同于大语言模型。
 
 本库负责请求、执行、并行、资源与生产关系；[AI Storage Notes](https://miauyle.github.io/ai-storage-notes/)深入 KV 层级、RDMA、GDS、对象存储与 GPU Data Path，避免复制底层存储专题。
 
-传统机器学习各算法、完整计算机视觉、推荐系统、强化学习理论与机器人控制尚未展开成完整专题体系。后续可沿这些分支扩充。本库不提供实时排行榜，不猜测未公开模型架构，也不把某篇论文的性能数字当作通用保证。
+本轮体系收口后进入维护、查漏补缺与技术演进更新阶段，停止主动横向新增专题；传统算法、完整视觉、推荐、强化学习理论与机器人不在当前扩充范围。本库不提供实时排行榜，不猜测未公开模型架构，也不把某篇论文的性能数字当作通用保证。
 
 [系统整合章节](docs/14-end-to-end-case.md)展示数据、模型、服务与业务状态如何连接；[知识地图](docs/00-learning-roadmap.md)解释各专题的依赖，不要求按文件编号阅读。
 
