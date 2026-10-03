@@ -144,6 +144,28 @@ Ring Attention 类方法将 K/V 块沿参与者轮转，让本地查询计算当
 
 减少激活后，权重 gather、通信缓冲或优化器可能成为新峰值。优化显存需要按时间线识别同时存活的对象，而不是逐项估算后只取平均。
 
+## RL 后训练的两个 GPU pool 与权重发布
+
+[第 08 章](08-post-training.md)解释轨迹、奖励和 policy staleness；本章负责这些对象如何落到资源、分布式布局和恢复边界，不重复算法循环。
+
+Rollout pool 使用推理引擎，主要承担权重、rollout KV、Decode 与工具/环境等待；training pool 承担前后向、激活、梯度和优化器。Trainer / rollout disaggregation 可以让两池独立选择 TP/FSDP 等布局与容量，但新增权重搬运、峰值缓冲和版本协调。共享 GPU 的阶段切换则需处理引擎/训练状态驻留与加载，不能同时按两套独占容量预算计算。
+
+奖励模型、reference model、可选 value/baseline 和 verifier 也消耗 GPU、CPU 或外部服务资源。资源配比看可训练轨迹产生率、训练消费率与更新目标，而非只最大化 rollout 吞吐。长尾或分组未完成会让 trainer 缺数据；trainer 慢则让 buffer 积压和策略陈旧。平台 placement 的责任见[第 29 章](29-ai-platform-and-cluster-scheduling.md)。
+
+| 权重发布边界 | 工程责任 |
+| --- | --- |
+| 固定更新版本 | 从一致 trainer 更新点取参数，保留模型/adapter、格式与版本身份 |
+| 布局转换与传输 | 将训练分片映射为 rollout 执行分片；量化/格式变化也要明确计算语义，临时副本占用进入预算 |
+| Staging 与校验 | 各执行 rank 准备新版本，旧版本不能因部分新分片到达而被原地拼混 |
+| 组级就绪与切换 | 必要成员就绪后按协议发布，记录确认和失败；只向满足版本要求的 worker 分配新轨迹 |
+| 在途轨迹处理 | 固定轨迹的策略版本，或明确实现支持的分段行为概率协议；消费旧样本的规则由算法合同决定 |
+
+表是需要实现的责任，不声称所有框架都有原子组切换。同步失败不能仅改一个 version label 后继续。旧版本轨迹和 KV 可在隔离的旧执行实例中继续；切至新权重时，不兼容的旧 KV 不得被当成新策略历史复用。暂停/排空、双版本驻留或重建状态有不同延迟与容量代价。
+
+Training checkpoint 保存可恢复的参数、优化器、步数和消费进度；rollout state 还包括在途 Token/KV、环境会话、工具结果和 buffer 领取状态。保存前者不自动保存后者。恢复可选择丢弃在途 rollout 并重新采样，或用有持久协议的轨迹日志恢复；需明确哪些已消费、哪些可重放，以及策略版本是否仍可用。Checkpoint 不会回滚外部工具效果。
+
+资源与布局转换的一手实例见[HybridFlow](https://arxiv.org/abs/2409.19256)，分离采样/训练并控制 staleness 的实例见[AReaL](https://arxiv.org/abs/2505.24298)。上述发布/恢复表表达设计责任，不推断这些项目均提供同一事务或持久恢复能力。
+
 ## 检查点怎样成为一个可恢复版本
 
 所有分片必须对应同一逻辑更新边界。异步保存可以先固定一致快照再后台写，不能让训练继续修改同一缓冲导致某些片段新、某些片段旧。快照本身需要额外内存和复制，后台存储失败仍要可见。
@@ -169,4 +191,4 @@ DCP 能按受支持的状态和布局重新分片，不自动保证任意框架�
 
 依据：[PyTorch Distributed Checkpoint](https://docs.pytorch.org/docs/stable/distributed.checkpoint.html)。设备故障后的整组重启/弹性边界见[第 29 章](29-ai-platform-and-cluster-scheduling.md)，恢复停顿与存储争用的容量影响见[第 30 章](30-ai-systems-performance.md)。
 
-检查点机制与数据路径见[第 27 章](27-compute-infrastructure.md)，资产发布见[第 26 章](26-model-lifecycle.md)。故障排查应分别看数据正确性、数值、通信等待、峰值内存和恢复一致性，避免用单一吞吐数字覆盖它们。
+数据消费、sampler/shard/RNG 与 mixture 的恢复合同见[第 15 章](15-data-lifecycle.md)，物理 staging/写入路径见[第 27 章](27-compute-infrastructure.md)，资产发布见[第 26 章](26-model-lifecycle.md)。训练 step 与多 rank 排障见[第 31 章](31-ai-systems-observability-and-debugging.md)。

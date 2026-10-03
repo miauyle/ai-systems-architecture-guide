@@ -158,7 +158,42 @@ SP 命名在不同论文中不完全一致，应核对实际算法。DCP 的支�
 
 排队关系与 Roofline 是带前提的分析工具，不独立预测生产 P99、通用 GPU speedup 或真实可交付容量。正文以一致负载和质量/SLO 约束解释测量。
 
-## 通用学习与生成家族
+## Observability、Profiling 与故障定位
+
+| 一手资料 | 支持的机制 | 正文 |
+| --- | --- | --- |
+| [PyTorch Profiler](https://docs.pytorch.org/docs/stable/profiler.html) | 框架算子、CPU/设备活动与采集开销 | [31](31-ai-systems-observability-and-debugging.md) |
+| [CUDA 异步执行](https://docs.nvidia.com/cuda/cuda-programming-guide/02-basics/asynchronous-execution.html) | stream、event、提交与完成依赖 | [27](27-compute-infrastructure.md)、[31](31-ai-systems-observability-and-debugging.md) |
+| [Nsight Systems User Guide](https://docs.nvidia.com/nsight-systems/UserGuide/index.html) | CPU/CUDA/复制与 NVTX 关联的系统时间线 | [31](31-ai-systems-observability-and-debugging.md) |
+| [Nsight Compute Profiling Guide](https://docs.nvidia.com/nsight-compute/ProfilingGuide/index.html) | Kernel counter、replay 与测量扰动 | [31](31-ai-systems-observability-and-debugging.md) |
+| [NCCL Troubleshooting](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/troubleshooting.html) / [Environment Variables](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html) | 网络/系统检查与受控 debug 信息；选项依版本 | [31](31-ai-systems-observability-and-debugging.md) |
+| [PyTorch Flight Recorder](https://docs.pytorch.org/tutorials/unstable/flight_recorder_tutorial.html) | 通信组、collective 序号与跨 rank 停滞分析 | [31](31-ai-systems-observability-and-debugging.md) |
+| [Understanding CUDA Memory Usage](https://docs.pytorch.org/docs/stable/torch_cuda_memory) | allocator snapshot 与不可见的外部分配边界 | [31](31-ai-systems-observability-and-debugging.md) |
+| [OpenTelemetry Context Propagation](https://opentelemetry.io/docs/concepts/context-propagation/) / [Traces](https://opentelemetry.io/docs/concepts/signals/traces/) | trace/span 关联与跨进程传播，不是 GPU profiler | [31](31-ai-systems-observability-and-debugging.md) |
+| [vLLM Metrics](https://docs.vllm.ai/en/stable/design/metrics/) | 引擎计时、请求/迭代指标的具体实例 | [30](30-ai-systems-performance.md)、[31](31-ai-systems-observability-and-debugging.md) |
+
+## Reasoning / RL Training Systems
+
+| 原始论文 / 官方项目 | 支持的机制 | 正文 |
+| --- | --- | --- |
+| [HybridFlow](https://arxiv.org/abs/2409.19256)（2024） / [verl](https://github.com/verl-project/verl) | RL 数据流、训练/生成并行布局和资源组织的实现实例 | [08](08-post-training.md)、[17](17-training-engineering.md) |
+| [AReaL](https://arxiv.org/abs/2505.24298)（2025） / [官方项目](https://github.com/areal-project/AReaL) | 异步生成/训练、陈旧轨迹与算法适配的实例 | [08](08-post-training.md)、[17](17-training-engineering.md) |
+
+算法流程依据还包括前表 InstructGPT 与 DeepSeek-R1。论文/实现中的吞吐或质量结论有具体实验条件，不能推出所有异步 RL 都兼容任意旧样本或都有同等收益；本文不绑定某框架的默认参数。
+
+## Training Data Engineering
+
+| 一手资料 | 支持的机制 | 正文 |
+| --- | --- | --- |
+| [PyTorch Data](https://docs.pytorch.org/docs/stable/data.html) | Dataset/DataLoader、IterableDataset worker、DistributedSampler 的补齐/丢尾与 shuffle | [15](15-data-lifecycle.md) |
+| [Hugging Face Dataset Streaming](https://huggingface.co/docs/datasets/stream) | shard、有限 buffer shuffle、interleave 与可恢复范围 | [15](15-data-lifecycle.md) |
+| [Deduplicating Training Data Makes Language Models Better](https://aclanthology.org/2022.acl-long.577/)（预印本 2021） / [官方代码](https://github.com/google-research/deduplicate-text-datasets) | 重复与训练/评测泄漏的原始研究 | [15](15-data-lifecycle.md) |
+| [DoReMi](https://arxiv.org/abs/2305.10429)（2023） | 数据域加权与训练 mixture 的研究实例 | [15](15-data-lifecycle.md) |
+| [Rethinking Benchmark and Contamination with Rephrased Samples](https://arxiv.org/abs/2311.04850)（2023） | 仅精确匹配不能覆盖改写污染 | [15](15-data-lifecycle.md) |
+
+2026-10-03 本轮补充并查阅上述 profiling、通信诊断、RL 系统与训练数据一手入口。官方实现支持和数据恢复精度可能变化；manifest/消费提交等正文表格是应明确的设计责任，不声称所有 loader 或框架天然提供完全相同的合同。未对全部历史外链重新逐一验证。
+
+## 通用学习与生成家族及基础资料
 
 | 资料 | 年份 | 对应主题 |
 | --- | --- | --- |

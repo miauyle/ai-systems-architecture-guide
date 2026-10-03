@@ -32,8 +32,8 @@
 | KV Cache | 每层历史 Key/Value 缓存 | 不存储答案，不更新参数 | [09](09-inference-and-memory.md) |
 | Prefill / Decode | 输入处理 / 增量生成阶段 | 与完整首字延迟、网络延迟不同 | [09](09-inference-and-memory.md) |
 | Quantization | 量化，低比特表示与相关计算技术 | 权重与 KV 分别判断；降存储不必然降延迟 | [18](18-inference-engineering.md) |
-| TTFT | 首 Token 延迟 | 先说明计时边界，再判断包含哪些链路开销 | [10](10-serving-and-distributed.md) |
-| Throughput | 吞吐，单位时间的处理量 | 与单请求延迟不同 | [10](10-serving-and-distributed.md) |
+| TTFT | 首 Token 延迟 | 先说明计时边界，再判断包含哪些链路开销 | [30](30-ai-systems-performance.md) |
+| Throughput | 吞吐，单位时间的处理量 | 与单请求延迟不同；说明有效交付分子 | [30](30-ai-systems-performance.md) |
 | RAG | 检索增强生成 | 不只有向量数据库 | [11](11-rag-and-agents.md) |
 | Reranker | 对检索候选再排序的组件 | 不能找回从未进入候选的文档 | [19](19-retrieval-engineering.md) |
 | Tool calling | 模型提出结构化工具调用 | 提议与授权执行是两个环节 | [11](11-rag-and-agents.md) |
@@ -56,7 +56,6 @@
 | GAN | 生成对抗网络，生成器与判别器共同训练 | [24](24-generative-models.md) |
 | Diffusion | 扩散生成，训练与采样采用噪声相关机制 | [24](24-generative-models.md) |
 | Flow Matching | 流匹配，学习分布路径上的向量场 | [24](24-generative-models.md) |
-| Arithmetic intensity | 算术强度，每字节数据对应的运算量 | [27](27-compute-infrastructure.md) |
 | RDMA | 远端内存访问；不自动替代应用协议 | [27](27-compute-infrastructure.md) |
 | Prompt injection | 不可信内容改变模型指令处理 | [25](25-ai-security.md) |
 | Model artifact | 模型资产，包含权重及匹配配置与处理器 | [26](26-model-lifecycle.md) |
@@ -114,3 +113,28 @@
 | Little’s Law | 稳定边界中的平均在系统数量 = 到达率 × 平均停留；不是 P99 预测 | [30](30-ai-systems-performance.md) |
 | SLO-driven capacity | 在质量、延迟、错误/准入约束下的服务容量 | [30](30-ai-systems-performance.md) |
 | Cost per request / token | 同一窗口总资源成本除以明确口径的交付量 | [30](30-ai-systems-performance.md) |
+
+## 训练数据、RL 闭环与可观测性
+
+| 术语 | 含义与边界 | 正文 |
+| --- | --- | --- |
+| Dataset manifest / version | 内容与处理清单 / 不可变数据快照；可变地址不是充分版本 | [15](15-data-lifecycle.md) |
+| Mixture / sampling weight | 数据源组合与抽样权重；样本份额不等于 Token 份额 | [15](15-data-lifecycle.md) |
+| Token budget / epoch | 按明确 Token 口径的进度 / 固定集合一轮；无限流不必有自然 epoch | [15](15-data-lifecycle.md) |
+| Sample / sequence packing | 长度编组或同序列拼接；必须保护样本边界与监督语义 | [15](15-data-lifecycle.md) |
+| Streaming dataset / shard | 按需迭代 / I/O 与归属单位；分片不自动解决 mixture 与重复读取 | [15](15-data-lifecycle.md) |
+| Distributed sampler / loader resume | rank 样本分配 / 消费进度恢复；预取位置不等于已训练位置 | [15](15-data-lifecycle.md) |
+| Synthetic data / contamination | 合成数据 / 评测信息进入训练或开发链；生成数据也需血缘与独立验证 | [15](15-data-lifecycle.md) |
+| Rollout / trajectory | 策略与环境交互生成 / 带版本、动作/观察和完成状态的训练对象 | [08](08-post-training.md) |
+| Behavior policy / reference model | 本轨迹采样策略 / 目标中的参考约束；不等于更新中的 trainer | [08](08-post-training.md) |
+| Rollout buffer / policy staleness | 待消费轨迹及提交状态 / 采样与训练策略偏离；不能只用墙钟时间定义 | [08](08-post-training.md) |
+| On-policy / asynchronous rollout | 与算法采样策略匹配 / 采样训练重叠；异步不是任意旧样本都可用 | [08](08-post-training.md) |
+| Weight sync / trainer-rollout disaggregation | 一致版本发布 / 训练和生成分池；需要布局转换与组级切换 | [17](17-training-engineering.md) |
+| Observability | 用相关证据解释状态与依赖；不是监控指标数量 | [31](31-ai-systems-observability-and-debugging.md) |
+| Metric / log | 窗口聚合 / 对象事件；单独无法恢复完整因果链 | [31](31-ai-systems-observability-and-debugging.md) |
+| Trace / span / context propagation | 操作依赖、阶段与跨组件关联；业务 request ID 不必等于 trace ID | [31](31-ai-systems-observability-and-debugging.md) |
+| Event timeline / profiler | 事件执行依赖 / 调用与设备成本；CPU 提交不等于 GPU 完成 | [31](31-ai-systems-observability-and-debugging.md) |
+| NVTX / hardware counter | 时间线语义标注 / 设备特征计数；marker 不是测量器，counter 不是业务正确性 | [31](31-ai-systems-observability-and-debugging.md) |
+| GPU utilization / occupancy | 特定口径设备忙碌 / 驻留执行资源比例；二者不等于有效吞吐 | [31](31-ai-systems-observability-and-debugging.md) |
+| Straggler / exposed communication | 同步组迟到参与者 / 未被其他工作隐藏的通信等待 | [31](31-ai-systems-observability-and-debugging.md) |
+| Allocator reserved / fragmentation | allocator 保留容量 / 分配布局碎片；保留中活跃字节不可重复相加 | [31](31-ai-systems-observability-and-debugging.md) |

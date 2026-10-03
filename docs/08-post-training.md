@@ -43,13 +43,57 @@ SFT 样本通常包含指令、上下文和期望回复。先按实际聊天模�
 
 ## 在线 RL 的数据与模型怎样循环
 
-以典型 PPO 类 RLHF 为例，采样 worker 用某一版本策略生成回复，保留生成 Token、旧策略概率及必要轨迹。奖励模型或可验证规则给结果评分；参考策略可提供偏离约束；价值模型或其他基线帮助估计优势，减少梯度噪声。
+Policy model 定义当前策略，rollout workers 用已发布的策略版本执行生成；Environment / Tools / Verifier 返回观察与评分，trajectory/reward 再进入 training workers。训练更新参数，发布新权重，后续 rollout 才使用新策略。这同时需要训练系统的更新一致性和推理系统的生成、KV 与调度能力。
 
-训练 worker 将轨迹转为优势与优化目标，对选定回复计算新策略概率，在更新约束下提高有利动作的倾向。价值模型可以参与训练；其他 RL 方法可能使用分组基线而不维护独立价值模型，因此这些组件并非所有后训练必备。
+```mermaid
+flowchart TB
+    P[已发布 Policy Version] --> R[Rollout Workers]
+    R --> E[Environment 与 Tools]
+    E --> R
+    R --> T[Trajectory 与完成状态]
+    T --> V[Reward 与 Verifier]
+    V --> B[Rollout Buffer]
+    B --> W[Training Workers]
+    F[Reference 与可选 Baseline] --> W
+    W --> U[Policy Update]
+    U --> S[Weight Sync 与发布]
+    S --> P
+```
 
-更新后的权重再同步给采样 worker，产生下一批轨迹。采样、奖励、训练的版本和顺序很重要：用过旧策略的轨迹配新策略更新会产生偏离，吞吐优化需要明确允许的陈旧程度。奖励慢、输出长或频繁同步，也可能让 GPU 等待。
+图表达依赖，奖励也可在中间步骤计算，并非所有方法都等待整条轨迹结束。PPO 类流程可能有可训练 value model；其他方法可能用同一 prompt 多条 rollout 的 group baseline 或其他估计。Reference model 可提供漂移约束，但不等于生成本轨迹的 behavior policy，也不等于更新中的 trainer；上述组件并非所有方法必备。算法基础依据：[InstructGPT](https://arxiv.org/abs/2203.02155)。
 
-在线采样将“生成系统”放进训练闭环，因此成本不仅是一次反向：还包括 rollout KV、多个模型或规则执行、权重同步和轨迹存储。奖励优化可能产生钻规则空子的行为，最终仍需独立任务评估。公开流程入口：[InstructGPT](https://arxiv.org/abs/2203.02155)。
+Training workers 根据 reward 与所用 baseline 构造优势/目标，对选定动作位置做前向计分并反向更新策略；PPO 类目标需要对应的新旧策略概率及更新约束。Rollout 是产生训练对象的推理，不是边生成边对每个 Token 做优化器更新。概率记录还要区分原模型分布、temperature/truncation 等实际采样变换和算法所需计分口径，不能在版本或采样设置不一致时直接混用。
+
+## 轨迹所有权、奖励与生成状态
+
+| 对象 | 谁产生、谁消费 | 生命周期与边界 |
+| --- | --- | --- |
+| Rollout KV | 生成引擎产生，后续生成位置读取 | 与实际策略/adapter、历史和位置绑定；不是优化器状态，也不是训练反向激活 |
+| Trajectory | rollout 协调者归集 Token、动作/观察、概率与 mask，trainer 消费 | 标识 prompt/trajectory/attempt、behavior policy version、结束原因及工具/奖励版本 |
+| Reward / verifier result | 模型、程序、环境或人给信号，训练目标消费 | 保留评分依据与有效状态；验证器超时不等于回答错误或奖励为零 |
+| Rollout buffer | 接收已完成/可训练轨迹，训练消费器领取 | 需明确分组完整性、去重、领取/提交、过期与容量背压 |
+
+轨迹的逻辑所有者可以是协调者/存储服务，不必是保存所有 Token 的同一 GPU worker。失败重试要用 attempt 区分，并在进入 buffer 时避免重复计入；“收到结果”与“已被某次更新消费”是不同状态。
+
+工具返回成为下一段生成的上下文，模型动作位置与环境提供的观察位置要有不同训练 mask。Verifier 只检查它覆盖的规则，不能由测试通过推断全部事实或安全正确。环境具有副作用时，重试需要业务幂等或对账；重新生成轨迹不会自动撤销已执行的动作，见[Agent Runtime](20-agent-runtime.md)。
+
+Failed / truncated rollout 要区别模型终止、长度截断、环境失败与超时。是否可用于训练、截断末端如何计目标/基线，取决于算法；不能把未完成样本统一标成低奖励，更不能悄悄删除所有长失败轨迹后宣称策略改善。
+
+## 同步与异步 rollout：陈旧程度是一份算法合同
+
+Synchronous rollout 常在固定策略版本下收集一批，再训练并切换版本，边界清楚，但长尾轨迹、verifier 或工具会让其他资源等待。Asynchronous rollout 允许采样与训练重叠，减少部分等待，却需处理在途旧版本轨迹、积压和策略漂移。
+
+Policy staleness 不是只看生成距今多久：要记录生成策略与当前训练策略之间的更新跨度，必要时检查分布差异和行为概率。On-policy 指数据与算法要求的采样策略相匹配，不是“刚生成的样本”同义词；新样本若来自错误权重，同样不满足。算法可能允许受控复用/校正，但不能将旧轨迹重新贴成新版本来消除偏离。
+
+权重更新后，旧 rollout 可等待消费、在限定窗口内按支持的方法校正、弃用或重新生成；选择要由目标与实现合同确定。重算新策略概率能提供优化所需评分，却不改变轨迹原来由谁采样。持续异步还需要 buffer 上限与背压，否则高速采样只会增加过期样本和存储。
+
+## 长 Reasoning 轨迹为什么改变系统效率
+
+长轨迹占用更多 rollout KV、Decode 轮次、轨迹字节和训练有效位置；工具等待延长状态驻留，分组奖励可能等待同组最后一条完成。截断率、通过验证的完成量、版本可用性及奖励/训练消费能力，需要与 raw rollout tokens/s 一起看。
+
+Rollout throughput 很高，不代表单位成本产生了更多可用学习信号：长失败回答、重复动作、奖励积压和 stale 样本弃用都可能消耗资源而不产生有效更新。最终仍以独立质量评估、达到目标所需时间/成本判断，不将更长推理或更高奖励自动等同于更强能力。
+
+Trainer/rollout 分池、布局转换、权重发布与 checkpoint 的工程责任见[第 17 章](17-training-engineering.md)；观测关联见[第 31 章](31-ai-systems-observability-and-debugging.md)。一手系统实例：[HybridFlow](https://arxiv.org/abs/2409.19256)、[AReaL](https://arxiv.org/abs/2505.24298)；它们展示分离、同步或异步设计，不代表所有 RL 算法共享同一采样合同，也不将论文 speedup 当作普遍收益。
 
 ## LoRA 怎样减少可训练状态
 

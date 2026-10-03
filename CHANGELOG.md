@@ -1,5 +1,15 @@
 # 更新记录
 
+## 2026-10-03 · 最后一轮体系收口：观测、RL 系统与训练数据
+
+- 仅新增 31 Observability / Debugging：metrics/logs/traces/profiles 分工，请求与训练 step 关联、CPU/GPU timeline、工具层级、TTFT/utilization/hang/OOM 定位与版本血缘。
+- 深化 08/17：轨迹所有权、reward/verifier、同步/异步与 policy staleness、长 reasoning 成本、rollout/training GPU 分池、权重发布及 checkpoint/rollout state 边界。
+- 深化 15：manifest/version、mixture/token budget、sampling/packing/shuffling、rank/worker shard 所有权、已消费进度恢复、合成数据、污染、稀有覆盖与质量统计。
+- 按主责收拢 10/18/27/28/29/30 的重复机制：迭代批处理归 18，集群交接/路由归 10，物理/NCCL 归 27，图/Kernel 归 28，冷启动/弹性归 29，性能定义/公式归 30，观测排障归 31。
+- 保留六组、主题、目录和首页 11 个核心入口；Observability 进入评估与生命周期分组，通过知识地图、Performance 和 Production 交叉进入；同步导航、目录、术语和一手资料。
+- 专题止于 31，维护约定转为查漏补缺、跨章一致性和技术演进，不再主动横向扩张。
+- 站点回归增加 Observability 搜索与移动导航入口、窄屏数据/观测页面检查；首页核心卡片数量继续由现有配置校验。
+
 ## 2026-10-03 · 补齐 AI Systems 执行中间层
 
 - 新增 28 Compiler / Runtime：Eager、图捕获/中断、动态形状、Dynamo/AOTAutograd/Inductor、IR、融合、内存规划、编译缓存/调优、Kernel 提交与 CUDA Graph；区分 Triton、CUDA 和 FlashAttention。

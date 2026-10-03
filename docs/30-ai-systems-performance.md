@@ -4,7 +4,7 @@
 
 ## 为什么慢：先定义完成的工作，再定位等待
 
-AI 系统的结果不是“GPU 保持忙碌”，而是在正确性、质量、时限和成本约束下完成训练更新或用户请求。相同 GPU utilization 可能对应有效矩阵计算、通信、无效 padding、重计算或热点排队；没有工作量与时间边界，利用率不足以解释性能。
+AI 系统的结果是在正确性、质量、时限和成本约束下完成训练更新或用户请求。GPU utilization 不能替代有效工作量；怎样辨认忙碌与等待的真实原因由[第 31 章](31-ai-systems-observability-and-debugging.md)主责。
 
 本章统一从请求延迟、系统吞吐、资源容量到成本的关系。执行细节仍由[Compiler / Runtime](28-ai-compiler-and-runtime.md)、[训练](17-training-engineering.md)、[引擎](18-inference-engineering.md)和[平台](29-ai-platform-and-cluster-scheduling.md)展开。
 
@@ -130,9 +130,7 @@ Communication / computation overlap 在依赖允许时同时推进工作。通�
 
 重叠争用 HBM、SM、NIC，并延长缓冲寿命；为了重叠多留几份权重/通信缓冲，可能让峰值 OOM。优化按依赖、实际重叠与容量共同评估，训练见[第 17 章](17-training-engineering.md)，硬件见[第 27 章](27-compute-infrastructure.md)。
 
-Cache hit 要说明命中对象和可省工作：Prefix Cache 减少兼容前缀重算，不消除后续 Attention 对历史的读取；远端命中还需取回，模型文件命中仍需 GPU 加载。比较命中率时记录命中长度/字节、取回耗时、占用与淘汰，不只计“请求是否有任意命中”。
-
-Locality-aware routing、KV-aware routing 和 load-aware routing 可能冲突：已有长前缀的 worker 排队最久，空闲 worker 要重算，近端 Decode worker 容量不足。选择应按剩余工作、等待、传输与 SLO 风险，而不是固定最大化一个指标。[第 10 章](10-serving-and-distributed.md)展开集群路由合同。
+Cache 性能比较应记录命中长度/字节、真正省去的工作、取回耗时和驻留代价，而不只计有任意命中的请求比例。Prefix Cache 机制由[第 18 章](18-inference-engineering.md)主责，KV/load/locality 路由冲突由[第 10 章](10-serving-and-distributed.md)主责，权重缓存与冷启动由[第 29 章](29-ai-platform-and-cluster-scheduling.md)主责；本章用剩余关键路径和 SLO 比较其收益。
 
 ## Cost per request / token 的分母也有约束
 
@@ -157,13 +155,4 @@ SLO 是明确时间窗口内服务应达到的目标。容量规划应先固定�
 
 ## 将症状连接到可验证的原因
 
-| 观察到的症状 | 要关联的证据 | 可能改变的系统环节 |
-| --- | --- | --- |
-| TTFT 高、Prefill 本身短 | 多阶段队列、预处理、KV 取回、目标准入 | Router、背压、CPU 或 P/D 平衡 |
-| ITL 尾部很长 | 长 Prefill 混入、TP 等待、抢占/恢复、输出缓冲 | 迭代调度、拓扑、容量与交付 |
-| 显存还有空间但吞吐不升 | 有效带宽/算力、CPU 提交、通信与热点 | Kernel/布局、batch 或通信组 |
-| GPU 很忙但 useful throughput 低 | padding、取消后计算、草稿拒绝、重算与失败 | 有效工作预算、缓存和恢复策略 |
-| 扩容后仍排队 | 副本真实就绪、权重加载、编译、路由集中 | 平台启动路径与请求分流 |
-| 单节点快、跨节点慢 | collective 字节/频率、最慢 rank、NIC 拓扑 | Mesh 到物理 placement 与通信策略 |
-
-症状只是定位入口，不能仅凭一项观测确定原因。最终比较要保持语义、质量和负载一致，并记录优化后的新限制。[生产评估](22-evaluation-and-production.md)负责验收与发布，[集群平台](29-ai-platform-and-cluster-scheduling.md)负责资源生命周期，具体存储数据路径由[AI Storage Notes](https://miauyle.github.io/ai-storage-notes/)深入。
+本章定义指标、资源模型与 SLO 工作点；请求 trace、CPU/GPU timeline、工具选择以及 TTFT、utilization、hang/OOM 的定位路径由[第 31 章](31-ai-systems-observability-and-debugging.md)主责。比较优化仍须保持语义、质量和负载一致，记录优化后暴露的新限制，而非只报告一个局部 speedup。

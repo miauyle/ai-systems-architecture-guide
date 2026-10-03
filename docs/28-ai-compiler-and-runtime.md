@@ -104,6 +104,6 @@ FlashAttention 是 IO-aware 的精确 Attention 算法与其高效 Kernel 实现
 
 ## 相同模型为何有不同系统性能
 
-先固定模型、输入长度、dtype、质量要求和缓存状态，再观察图是否反复捕获、Kernel 是否过碎、缓冲是否过多、布局转换是否频繁、库选择是否合适，以及 CPU 是否及时提交。把编译/预热时间混进稳态平均，或只对固定 shape 热缓存测速，会隐藏不同问题。
+本章产生的图、guard、代码/库选择与缓冲计划会改变相同模型的执行。应记录 graph break、guard 失配/重新编译、编译缓存命中及产物版本；如何把这些事件关联到 CPU/GPU timeline、识别碎 Kernel 和提交等待，由[第 31 章](31-ai-systems-observability-and-debugging.md)主责。
 
 同一执行栈在大 Prefill、小批 Decode 和变长训练上可能有不同瓶颈。性能机制应连接[第 30 章](30-ai-systems-performance.md)中的关键路径与 Roofline；上线时还要通过[生产评估](22-evaluation-and-production.md)核对数值、状态隔离与真实负载。编译失败可回退执行，GPU/rank 故障则需要请求或训练状态恢复，编译缓存本身不能完成恢复。
