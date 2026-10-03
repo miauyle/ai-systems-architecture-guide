@@ -14,7 +14,7 @@ docsteer:
   mode: auto
   skin_switcher: true
   mode_switcher: true
-  doc_layouts: [doc]
+  doc_layouts: [doc, knowledge-directory]
 
   sidebar:
     enabled: true
@@ -48,7 +48,7 @@ docsteer:
     cdn_integrity: ""
 
   logo: /assets/images/logo-theme.svg
-  favicon: /assets/images/favicon.svg
+  favicon: /assets/images/favicon-systems.svg
 
   footer:
     show_credit: false
